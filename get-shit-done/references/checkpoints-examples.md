@@ -7,157 +7,158 @@ Extra examples and extended automation references for `get-shit-done/references/
 ## Human-Verify Examples
 
 **Example: UI Component**
-```xml
-<task type="auto">
-  <name>Build responsive dashboard layout</name>
-  <files>src/components/Dashboard.tsx, src/app/dashboard/page.tsx</files>
-  <action>Create dashboard with sidebar, header, and content area. Use Tailwind responsive classes for mobile.</action>
-  <verify>npm run build succeeds, no TypeScript errors</verify>
-  <done>Dashboard component builds without errors</done>
-</task>
+```markdown
+### Task 1: Build responsive dashboard layout
 
-<task type="auto">
-  <name>Start dev server for verification</name>
-  <action>Run `npm run dev` in background, wait for "ready" message, capture port</action>
-  <verify>curl http://localhost:3000 returns 200</verify>
-  <done>Dev server running at http://localhost:3000</done>
-</task>
+**Type:** `auto`
+**Files:** `src/components/Dashboard.tsx`, `src/app/dashboard/page.tsx`
+**Action:**
+- Create dashboard with sidebar, header, and content area.
+- Use Tailwind responsive classes for mobile.
+**Verify:**
+- `npm run build` succeeds (no TypeScript errors)
+**Done When:**
+- Dashboard builds and renders without errors
 
-<task type="checkpoint:human-verify" gate="blocking">
-  <what-built>Responsive dashboard layout - dev server running at http://localhost:3000</what-built>
-  <how-to-verify>
-    Visit http://localhost:3000/dashboard and verify:
-    1. Desktop (>1024px): Sidebar left, content right, header top
-    2. Tablet (768px): Sidebar collapses to hamburger menu
-    3. Mobile (375px): Single column layout, bottom nav appears
-    4. No layout shift or horizontal scroll at any size
-  </how-to-verify>
-  <resume-signal>Type "approved" or describe layout issues</resume-signal>
-</task>
+### Task 2: Start dev server for verification
+
+**Type:** `auto`
+**Files:** (none)
+**Action:**
+- Run `npm run dev` in background and wait for ready.
+**Verify:**
+- `curl http://localhost:3000` returns 200
+**Done When:**
+- Dev server running at http://localhost:3000
+
+### Task 3: Human verification - dashboard layout
+
+**Type:** `checkpoint:human-verify`
+**Gate:** `blocking`
+**What Built:** Responsive dashboard layout - dev server running at http://localhost:3000
+**How To Verify:**
+1. Visit http://localhost:3000/dashboard
+2. Desktop (>1024px): sidebar left, content right, header top
+3. Tablet (768px): sidebar collapses to hamburger menu
+4. Mobile (375px): single column layout, bottom nav appears
+5. No layout shift or horizontal scroll at any size
+**Resume Signal:** Reply with `approved` or describe layout issues.
 ```
 
 **Example: Xcode Build**
-```xml
-<task type="auto">
-  <name>Build macOS app with Xcode</name>
-  <files>App.xcodeproj, Sources/</files>
-  <action>Run `xcodebuild -project App.xcodeproj -scheme App build`. Check for compilation errors in output.</action>
-  <verify>Build output contains "BUILD SUCCEEDED", no errors</verify>
-  <done>App builds successfully</done>
-</task>
+```markdown
+### Task 1: Build macOS app with Xcode
 
-<task type="checkpoint:human-verify" gate="blocking">
-  <what-built>Built macOS app at DerivedData/Build/Products/Debug/App.app</what-built>
-  <how-to-verify>
-    Open App.app and test:
-    - App launches without crashes
-    - Menu bar icon appears
-    - Preferences window opens correctly
-    - No visual glitches or layout issues
-  </how-to-verify>
-  <resume-signal>Type "approved" or describe issues</resume-signal>
-</task>
+**Type:** `auto`
+**Files:** `App.xcodeproj`, `Sources/`
+**Action:**
+- Run `xcodebuild -project App.xcodeproj -scheme App build`.
+- Check output for compilation errors.
+**Verify:**
+- Build output contains `BUILD SUCCEEDED` and no errors
+**Done When:**
+- App builds successfully
+
+### Task 2: Human verification - run app
+
+**Type:** `checkpoint:human-verify`
+**Gate:** `blocking`
+**What Built:** Built macOS app at `DerivedData/Build/Products/Debug/App.app`
+**How To Verify:**
+1. Open `App.app`
+2. App launches without crashes
+3. Menu bar icon appears
+4. Preferences window opens correctly
+5. No visual glitches or layout issues
+**Resume Signal:** Reply with `approved` or describe issues.
 ```
 
 ## Decision Examples
 
 **Example: Auth Provider Selection**
-```xml
-<task type="checkpoint:decision" gate="blocking">
-  <decision>Select authentication provider</decision>
-  <context>
-    Need user authentication for the app. Three solid options with different tradeoffs.
-  </context>
-  <options>
-    <option id="supabase">
-      <name>Supabase Auth</name>
-      <pros>Built-in with Supabase DB we're using, generous free tier, row-level security integration</pros>
-      <cons>Less customizable UI, tied to Supabase ecosystem</cons>
-    </option>
-    <option id="clerk">
-      <name>Clerk</name>
-      <pros>Beautiful pre-built UI, best developer experience, excellent docs</pros>
-      <cons>Paid after 10k MAU, vendor lock-in</cons>
-    </option>
-    <option id="nextauth">
-      <name>NextAuth.js</name>
-      <pros>Free, self-hosted, maximum control, widely adopted</pros>
-      <cons>More setup work, you manage security updates, UI is DIY</cons>
-    </option>
-  </options>
-  <resume-signal>Select: supabase, clerk, or nextauth</resume-signal>
-</task>
+```markdown
+### Task N: Decision - authentication provider
+
+**Type:** `checkpoint:decision`
+**Gate:** `blocking`
+**Decision Needed:** Select authentication provider
+**Context:** Need user authentication for the app. Three solid options with different tradeoffs.
+**Options:**
+- `supabase`: Pros: built-in with Supabase DB, generous free tier, row-level security integration. Cons: less customizable UI, tied to Supabase ecosystem.
+- `clerk`: Pros: beautiful pre-built UI, great DX, excellent docs. Cons: paid after 10k MAU, vendor lock-in.
+- `nextauth`: Pros: free, self-hosted, maximum control, widely adopted. Cons: more setup work, you manage security updates, UI is DIY.
+**Resume Signal:** Select `supabase`, `clerk`, or `nextauth`.
 ```
 
 **Example: Database Selection**
-```xml
-<task type="checkpoint:decision" gate="blocking">
-  <decision>Select database for user data</decision>
-  <context>
-    App needs persistent storage for users, sessions, and user-generated content.
-    Expected scale: 10k users, 1M records first year.
-  </context>
-  <options>
-    <option id="supabase">
-      <name>Supabase (Postgres)</name>
-      <pros>Full SQL, generous free tier, built-in auth, real-time subscriptions</pros>
-      <cons>Vendor lock-in for real-time features, less flexible than raw Postgres</cons>
-    </option>
-    <option id="planetscale">
-      <name>PlanetScale (MySQL)</name>
-      <pros>Serverless scaling, branching workflow, excellent DX</pros>
-      <cons>MySQL not Postgres, no foreign keys in free tier</cons>
-    </option>
-    <option id="convex">
-      <name>Convex</name>
-      <pros>Real-time by default, TypeScript-native, automatic caching</pros>
-      <cons>Newer platform, different mental model, less SQL flexibility</cons>
-    </option>
-  </options>
-  <resume-signal>Select: supabase, planetscale, or convex</resume-signal>
-</task>
+```markdown
+### Task N: Decision - database selection
+
+**Type:** `checkpoint:decision`
+**Gate:** `blocking`
+**Decision Needed:** Select database for user data
+**Context:** App needs persistent storage for users, sessions, and user-generated content. Expected scale: 10k users, 1M records first year.
+**Options:**
+- `supabase`: Pros: full SQL, generous free tier, built-in auth, real-time subscriptions. Cons: lock-in for realtime features, less flexible than raw Postgres.
+- `planetscale`: Pros: serverless scaling, branching workflow, good DX. Cons: MySQL not Postgres, no foreign keys in free tier.
+- `convex`: Pros: real-time by default, TypeScript-native, automatic caching. Cons: newer platform, different mental model, less SQL flexibility.
+**Resume Signal:** Select `supabase`, `planetscale`, or `convex`.
 ```
 
 ## Human-Action Examples
 
 **Example: Email Verification**
-```xml
-<task type="auto">
-  <name>Create SendGrid account via API</name>
-  <action>Use SendGrid API to create subuser account with provided email. Request verification email.</action>
-  <verify>API returns 201, account created</verify>
-  <done>Account created, verification email sent</done>
-</task>
+```markdown
+### Task 1: Create SendGrid account via API
 
-<task type="checkpoint:human-action" gate="blocking">
-  <action>Complete email verification for SendGrid account</action>
-  <instructions>
-    I created the account and requested verification email.
-    Check your inbox for SendGrid verification link and click it.
-  </instructions>
-  <verification>SendGrid API key works: curl test succeeds</verification>
-  <resume-signal>Type "done" when email verified</resume-signal>
-</task>
+**Type:** `auto`
+**Files:** (none)
+**Action:**
+- Use SendGrid API to create subuser account with provided email.
+- Request verification email.
+**Verify:**
+- API returns 201 and account is created
+**Done When:**
+- Account created and verification email sent
+
+### Task 2: Human action - verify SendGrid email
+
+**Type:** `checkpoint:human-action`
+**Gate:** `blocking`
+**Automation Attempted:**
+- Created the account and requested a verification email.
+**Action Needed:** Click the SendGrid verification link in your inbox.
+**Why:** Email verification requires human interaction.
+**Verification (After):**
+- SendGrid API key works (curl test succeeds)
+**Resume Signal:** Reply with `done` when email is verified.
 ```
 
 **Example: Credit Card 3D Secure**
-```xml
-<task type="auto">
-  <name>Create Stripe payment intent</name>
-  <action>Use Stripe API to create payment intent for $99. Generate checkout URL.</action>
-  <verify>Stripe API returns payment intent ID and URL</verify>
-  <done>Payment intent created</done>
-</task>
+```markdown
+### Task 1: Create Stripe payment intent
 
-<task type="checkpoint:human-action" gate="blocking">
-  <action>Complete 3D Secure authentication</action>
-  <instructions>
-    I created the payment intent: https://checkout.stripe.com/pay/cs_test_abc123
-    Visit that URL and complete the 3D Secure verification flow with your test card.
-  </instructions>
-  <verification>Stripe webhook receives payment_intent.succeeded event</verification>
-  <resume-signal>Type "done" when payment completes</resume-signal>
-</task>
+**Type:** `auto`
+**Files:** (none)
+**Action:**
+- Use Stripe API to create payment intent for $99.
+- Generate checkout URL.
+**Verify:**
+- Stripe API returns payment intent ID and URL
+**Done When:**
+- Payment intent created
+
+### Task 2: Human action - complete 3D Secure
+
+**Type:** `checkpoint:human-action`
+**Gate:** `blocking`
+**Automation Attempted:**
+- Created the payment intent and generated a checkout URL.
+**Action Needed:** Visit `https://checkout.stripe.com/pay/cs_test_abc123` and complete the 3D Secure verification flow.
+**Why:** 3D Secure requires human interaction.
+**Verification (After):**
+- Stripe webhook receives `payment_intent.succeeded` event
+**Resume Signal:** Reply with `done` when payment completes.
 ```
 
 ## Execution Protocol Examples
@@ -246,30 +247,42 @@ Options:
 | Supabase | `supabase secrets set` | `supabase secrets set MY_SECRET=value` |
 
 **Pattern for secret collection:**
-```xml
+```markdown
 <!-- WRONG: Asking user to add env vars in dashboard -->
-<task type="checkpoint:human-action">
-  <action>Add OPENAI_API_KEY to Convex dashboard</action>
-  <instructions>Go to dashboard.convex.dev → Settings → Environment Variables → Add</instructions>
-</task>
+
+### Task N: Human action - set env var in dashboard
+
+**Type:** `checkpoint:human-action`
+**Gate:** `blocking`
+**Automation Attempted:**
+- None
+**Action Needed:** Add `OPENAI_API_KEY` to the Convex dashboard
+**Why:** This is automatable via CLI; the assistant should do it.
 
 <!-- RIGHT: Assistant asks for value, then adds via CLI -->
-<task type="checkpoint:human-action">
-  <action>Provide your OpenAI API key</action>
-  <instructions>
-    I need your OpenAI API key to configure the Convex backend.
-    Get it from: https://platform.openai.com/api-keys
-    Paste the key (starts with sk-)
-  </instructions>
-  <verification>I'll add it via `npx convex env set` and verify it's configured</verification>
-  <resume-signal>Paste your API key</resume-signal>
-</task>
 
-<task type="auto">
-  <name>Configure OpenAI key in Convex</name>
-  <action>Run `npx convex env set OPENAI_API_KEY {user-provided-key}`</action>
-  <verify>`npx convex env get OPENAI_API_KEY` returns the key (masked)</verify>
-</task>
+### Task N: Human action - provide OpenAI API key
+
+**Type:** `checkpoint:human-action`
+**Gate:** `blocking`
+**Automation Attempted:**
+- Ready to configure Convex env vars via CLI
+**Action Needed:** Paste your OpenAI API key (starts with `sk-`)
+**Why:** Secret retrieval requires user access to their account
+**Verification (After):**
+- I'll add it via `npx convex env set` and verify it's configured
+**Resume Signal:** Paste your API key.
+
+### Task N: Configure OpenAI key in Convex
+
+**Type:** `auto`
+**Files:** (none)
+**Action:**
+- Run `npx convex env set OPENAI_API_KEY {user-provided-key}`
+**Verify:**
+- `npx convex env get OPENAI_API_KEY` returns the key (masked)
+**Done When:**
+- Convex env var is set and readable
 ```
 
 ### Dev Server Automation
@@ -300,24 +313,32 @@ If default port is in use, check what's running and either:
 2. Use alternate port: `npm run dev -- --port 3001`
 
 **Pattern:**
-```xml
+```markdown
 <!-- Assistant starts server before checkpoint -->
-<task type="auto">
-  <name>Start dev server</name>
-  <action>Run `npm run dev` in background, wait for ready signal</action>
-  <verify>curl http://localhost:3000 returns 200</verify>
-  <done>Dev server running</done>
-</task>
+
+### Task N: Start dev server
+
+**Type:** `auto`
+**Files:** (none)
+**Action:**
+- Run `npm run dev` in background and wait for ready signal
+**Verify:**
+- `curl http://localhost:3000` returns 200
+**Done When:**
+- Dev server is running
 
 <!-- User only visits URL -->
-<task type="checkpoint:human-verify">
-  <what-built>Feature X - dev server running at http://localhost:3000</what-built>
-  <how-to-verify>
-    Visit http://localhost:3000/feature and verify:
-    1. [Visual check 1]
-    2. [Visual check 2]
-  </how-to-verify>
-</task>
+
+### Task N: Human verification - Feature X
+
+**Type:** `checkpoint:human-verify`
+**Gate:** `blocking`
+**What Built:** Feature X - dev server running at http://localhost:3000
+**How To Verify:**
+1. Visit http://localhost:3000/feature
+2. [Visual check 1]
+3. [Visual check 2]
+**Resume Signal:** Reply with `approved` or describe issues.
 ```
 
 ### CLI Installation Handling

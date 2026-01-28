@@ -529,11 +529,12 @@ Execute each task in the prompt. **Deviations are normal** - handle them automat
 
 2. For each task:
 
-   **If `type="auto"`:**
+   - Tasks are listed under `## Tasks` in the plan.
+   - Each task begins with a `### Task N:` heading.
 
-   **Before executing:** Check if task has `tdd="true"` attribute:
-- If yes: Follow TDD execution flow (see `<tdd_execution>`) - RED → GREEN → REFACTOR cycle with atomic commits per stage if commits are requested
-   - If no: Standard implementation
+   **If the task Type is `auto`:**
+
+   **Before executing:** If plan frontmatter `type: tdd`, follow TDD execution flow (RED → GREEN → REFACTOR).
 
    - Work toward task completion
    - **If CLI/API returns authentication error:** Handle as authentication gate (see below)
@@ -545,7 +546,7 @@ Execute each task in the prompt. **Deviations are normal** - handle them automat
 - Track task completion and commit hash for Summary documentation (if commits created)
    - Continue to next task
 
-   **If `type="checkpoint:*"`:**
+   **If the task Type starts with `checkpoint:`:**
 
    - STOP immediately (do not continue to next task)
    - Execute checkpoint_protocol (see below)
@@ -553,8 +554,8 @@ Execute each task in the prompt. **Deviations are normal** - handle them automat
    - Verify if possible (check files, env vars, etc.)
    - Only after user confirmation: continue to next task
 
-3. Run overall verification checks from `<verification>` section
-4. Confirm all success criteria from `<success_criteria>` section met
+3. Run overall verification checks from `## Verification` section
+4. Confirm all success criteria from `## Success Criteria` section met
 5. Document all deviations in Summary (automatic - see deviation_documentation below)
    </step>
 
@@ -562,7 +563,7 @@ Execute each task in the prompt. **Deviations are normal** - handle them automat
 
 ## Handling Authentication Errors During Execution
 
-**When you encounter authentication errors during `type="auto"` task execution:**
+**When you encounter authentication errors during `auto` task execution:**
 
 This is NOT a failure. Authentication gates are expected and normal. Handle them dynamically:
 
@@ -899,7 +900,7 @@ TASK_COMMITS+=("Task ${TASK_NUM}: ${TASK_COMMIT}")
 </task_commit>
 
 <step name="checkpoint_protocol">
-When encountering `type="checkpoint:*"`:
+When encountering a checkpoint task (Type starts with `checkpoint:`):
 
 **Critical: The assistant automates everything with CLI/API before checkpoints.** Checkpoints are for verification and decisions, not manual work.
 
@@ -1444,7 +1445,7 @@ Compare the counts from Step 1:
 
 Identify the next unexecuted plan:
 - Find the first PLAN.md file that has no matching SUMMARY.md
-- Read its `<objective>` section
+- Read its `## Objective` section
 
 <if mode="yolo">
 ```

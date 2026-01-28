@@ -26,30 +26,35 @@ Plans execute autonomously. Checkpoints formalize interaction points where human
 - Accessibility testing
 
 **Structure:**
-```xml
-<task type="checkpoint:human-verify" gate="blocking">
-  <what-built>[What the assistant automated and deployed/built]</what-built>
-  <how-to-verify>
-    [Exact steps to test - URLs, commands, expected behavior]
-  </how-to-verify>
-  <resume-signal>[How to continue - "approved", "yes", or describe issues]</resume-signal>
-</task>
+```markdown
+### Task N: [Human verification - short name]
+
+**Type:** `checkpoint:human-verify`
+**Gate:** `blocking`
+**What Built:** [What the assistant automated and deployed/built] (URL: [http://localhost:3000])
+**How To Verify:**
+1. [Exact step - URL to visit]
+2. [What to check]
+3. [Expected behavior]
+**Resume Signal:** Reply with `approved` or describe issues.
 ```
 
 **Key elements:**
-- `<what-built>`: What the assistant automated (deployed, built, configured)
-- `<how-to-verify>`: Exact steps to confirm it works (numbered, specific)
-- `<resume-signal>`: Clear indication of how to continue
+- `What Built`: What the assistant automated (deployed, built, configured)
+- `How To Verify`: Exact steps to confirm it works (numbered, specific)
+- `Resume Signal`: Clear indication of how to continue
 
 **Example (short):**
-```xml
-<task type="checkpoint:human-verify" gate="blocking">
-  <what-built>Feature X running at http://localhost:3000</what-built>
-  <how-to-verify>
-    Visit http://localhost:3000/feature and confirm expected behavior.
-  </how-to-verify>
-  <resume-signal>Type "approved" or describe issues</resume-signal>
-</task>
+```markdown
+### Task N: Human verification - Feature X
+
+**Type:** `checkpoint:human-verify`
+**Gate:** `blocking`
+**What Built:** Feature X running at http://localhost:3000
+**How To Verify:**
+1. Visit http://localhost:3000/feature
+2. Confirm expected behavior
+**Resume Signal:** Reply with `approved` or describe issues.
 ```
 
 **More examples:** See `get-shit-done/references/checkpoints-examples.md`.
@@ -68,31 +73,24 @@ Plans execute autonomously. Checkpoints formalize interaction points where human
 - Data model decisions (schema structure)
 
 **Structure:**
-```xml
-<task type="checkpoint:decision" gate="blocking">
-  <decision>[What's being decided]</decision>
-  <context>[Why this decision matters]</context>
-  <options>
-    <option id="option-a">
-      <name>[Option name]</name>
-      <pros>[Benefits]</pros>
-      <cons>[Tradeoffs]</cons>
-    </option>
-    <option id="option-b">
-      <name>[Option name]</name>
-      <pros>[Benefits]</pros>
-      <cons>[Tradeoffs]</cons>
-    </option>
-  </options>
-  <resume-signal>[How to indicate choice]</resume-signal>
-</task>
+```markdown
+### Task N: [Decision - short name]
+
+**Type:** `checkpoint:decision`
+**Gate:** `blocking`
+**Decision Needed:** [What's being decided]
+**Context:** [Why this decision matters]
+**Options:**
+- `option-a`: Pros: [benefits]. Cons: [tradeoffs].
+- `option-b`: Pros: [benefits]. Cons: [tradeoffs].
+**Resume Signal:** Select `option-a` or `option-b`.
 ```
 
 **Key elements:**
-- `<decision>`: What's being decided
-- `<context>`: Why this matters
-- `<options>`: Each option with balanced pros/cons (not prescriptive)
-- `<resume-signal>`: How to indicate choice
+- `Decision Needed`: What's being decided
+- `Context`: Why this matters
+- `Options`: Each option with balanced pros/cons (not prescriptive)
+- `Resume Signal`: How to indicate choice
 
 **Examples:** See `get-shit-done/references/checkpoints-examples.md`.
 </type>
@@ -117,16 +115,18 @@ Plans execute autonomously. Checkpoints formalize interaction points where human
 - Creating files manually (use Write tool)
 
 **Structure:**
-```xml
-<task type="checkpoint:human-action" gate="blocking">
-  <action>[What human must do - the assistant already did everything automatable]</action>
-  <instructions>
-    [What the assistant already automated]
-    [The ONE thing requiring human action]
-  </instructions>
-  <verification>[What the assistant can check afterward]</verification>
-  <resume-signal>[How to continue]</resume-signal>
-</task>
+```markdown
+### Task N: [Human action - short name]
+
+**Type:** `checkpoint:human-action`
+**Gate:** `blocking`
+**Automation Attempted:**
+- [What the assistant already automated]
+**Action Needed:** [The ONE thing requiring human action]
+**Why:** [Why the assistant cannot do it]
+**Verification (After):**
+- [What the assistant will check afterward]
+**Resume Signal:** Reply with `done` when complete.
 ```
 
 **Key principle:** The assistant automates everything possible first, only asks human for the truly unavoidable manual step.
@@ -137,7 +137,7 @@ Plans execute autonomously. Checkpoints formalize interaction points where human
 
 <execution_protocol>
 
-When the assistant encounters `type="checkpoint:*"`:
+When the assistant encounters a checkpoint task (Type starts with `checkpoint:`):
 
 1. **Stop immediately** - do not proceed to next task
 2. **Display checkpoint clearly** using the defined checkpoint format

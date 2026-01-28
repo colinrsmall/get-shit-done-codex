@@ -165,14 +165,14 @@ Plans:
 - [ ] 02-03: Add refresh token rotation
 ```
 
-Or from PLAN.md `<objective>`:
+Or from PLAN.md `## Objective`:
 
-```xml
-<objective>
+```markdown
+## Objective
+
 Add refresh token rotation with sliding expiry window.
 
 Purpose: Extend session lifetime without compromising security.
-</objective>
 ```
 
 Extract: `**02-03: Refresh Token Rotation** — Add /api/auth/refresh with sliding expiry`

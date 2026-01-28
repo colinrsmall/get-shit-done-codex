@@ -29,91 +29,99 @@ must_haves:
   key_links: []             # Critical connections between artifacts
 ---
 
-<objective>
+## Objective
+
 [What this plan accomplishes]
 
 Purpose: [Why this matters for the project]
 Output: [What artifacts will be created]
-</objective>
 
-<execution_context>
-@~/.config/opencode/get-shit-done/workflows/execute-plan.md
-@~/.config/opencode/get-shit-done/templates/summary.md
-[If plan contains checkpoint tasks (type="checkpoint:*"), add:]
-@~/.config/opencode/get-shit-done/references/checkpoints.md
-</execution_context>
+## Execution Context
 
-<context>
-@.planning/PROJECT.md
-@.planning/ROADMAP.md
-@.planning/STATE.md
+- @~/.config/opencode/get-shit-done/workflows/execute-plan.md
+- @~/.config/opencode/get-shit-done/templates/summary.md
+- If this plan contains any checkpoint tasks, also include:
+  - @~/.config/opencode/get-shit-done/references/checkpoints.md
 
-# Only reference prior plan SUMMARYs if genuinely needed:
-# - This plan uses types/exports from prior plan
-# - Prior plan made decision that affects this plan
-# Do NOT reflexively chain: Plan 02 refs 01, Plan 03 refs 02...
+## Context
 
-[Relevant source files:]
-@src/path/to/relevant.ts
-</context>
+- @.planning/PROJECT.md
+- @.planning/ROADMAP.md
+- @.planning/STATE.md
 
-<tasks>
+Only reference prior plan SUMMARYs if genuinely needed:
+- This plan uses types/exports from a prior plan
+- A prior plan made a decision that constrains this plan
 
-<task type="auto">
-  <name>Task 1: [Action-oriented name]</name>
-  <files>path/to/file.ext, another/file.ext</files>
-  <action>[Specific implementation - what to do, how to do it, what to avoid and WHY]</action>
-  <verify>[Command or check to prove it worked]</verify>
-  <done>[Measurable acceptance criteria]</done>
-</task>
+Do NOT reflexively chain: plan 02 refs 01, plan 03 refs 02.
 
-<task type="auto">
-  <name>Task 2: [Action-oriented name]</name>
-  <files>path/to/file.ext</files>
-  <action>[Specific implementation]</action>
-  <verify>[Command or check]</verify>
-  <done>[Acceptance criteria]</done>
-</task>
+Relevant source files (only if needed):
+- @src/path/to/relevant.ts
 
-<!-- For checkpoint task examples and patterns, see @~/.config/opencode/get-shit-done/references/checkpoints.md -->
-<!-- Key rule: assistant starts dev server BEFORE human-verify checkpoints. User only visits URLs. -->
+## Tasks
 
-<task type="checkpoint:decision" gate="blocking">
-  <decision>[What needs deciding]</decision>
-  <context>[Why this decision matters]</context>
-  <options>
-    <option id="option-a"><name>[Name]</name><pros>[Benefits]</pros><cons>[Tradeoffs]</cons></option>
-    <option id="option-b"><name>[Name]</name><pros>[Benefits]</pros><cons>[Tradeoffs]</cons></option>
-  </options>
-  <resume-signal>Select: option-a or option-b</resume-signal>
-</task>
+For command-only tasks (start dev server, run migrations), use `**Files:** (none)`.
 
-<task type="checkpoint:human-verify" gate="blocking">
-  <what-built>[What the assistant built] - server running at [URL]</what-built>
-  <how-to-verify>Visit [URL] and verify: [visual checks only, NO CLI commands]</how-to-verify>
-  <resume-signal>Type "approved" or describe issues</resume-signal>
-</task>
+### Task 1: [Action-oriented name]
 
-</tasks>
+**Type:** `auto`
+**Files:** `path/to/file.ext`, `another/file.ext`
+**Action:**
+- [Specific implementation - what to do, how to do it, what to avoid and why]
+**Verify:**
+- `[Command or check to prove it worked]`
+**Done When:**
+- [Measurable acceptance criteria]
 
-<verification>
+### Task 2: [Action-oriented name]
+
+**Type:** `auto`
+**Files:** `path/to/file.ext`
+**Action:**
+- [Specific implementation]
+**Verify:**
+- `[Command or check]`
+**Done When:**
+- [Acceptance criteria]
+
+### Task 3: [Decision checkpoint]
+
+**Type:** `checkpoint:decision`
+**Gate:** `blocking`
+**Decision Needed:** [What needs deciding]
+**Context:** [Why this decision matters]
+**Options:**
+- `option-a`: Pros: [benefits]. Cons: [tradeoffs].
+- `option-b`: Pros: [benefits]. Cons: [tradeoffs].
+**Resume Signal:** Select `option-a` or `option-b`.
+
+### Task 4: [Human verification checkpoint]
+
+**Type:** `checkpoint:human-verify`
+**Gate:** `blocking`
+**What Built:** [What the assistant built] (URL: [http://localhost:3000])
+**How To Verify:**
+1. Visit [URL]
+2. Verify: [visual/functional checks only, NO CLI commands]
+**Resume Signal:** Reply with `approved` or describe issues.
+
+## Verification
+
 Before declaring plan complete:
 - [ ] [Specific test command]
 - [ ] [Build/type check passes]
 - [ ] [Behavior verification]
-</verification>
 
-<success_criteria>
+## Success Criteria
 
 - All tasks completed
 - All verification checks pass
 - No errors or warnings introduced
 - [Plan-specific criteria]
-  </success_criteria>
 
-<output>
+## Output
+
 After completion, create `.planning/phases/XX-name/{phase}-{plan}-SUMMARY.md`
-</output>
 ```
 
 ---
@@ -301,54 +309,65 @@ plan: 01
 type: execute
 wave: 1
 depends_on: []
-files_modified: [src/features/user/model.ts, src/features/user/api.ts, src/features/user/UserList.tsx]
+files_modified:
+  - src/features/user/model.ts
+  - src/features/user/api.ts
+  - src/features/user/UserList.tsx
 autonomous: true
 ---
 
-<objective>
-Implement complete User feature as vertical slice.
+## Objective
+
+Implement complete User feature as a vertical slice.
 
 Purpose: Self-contained user management that can run parallel to other features.
 Output: User model, API endpoints, and UI components.
-</objective>
 
-<context>
-@.planning/PROJECT.md
-@.planning/ROADMAP.md
-@.planning/STATE.md
-</context>
+## Context
 
-<tasks>
-<task type="auto">
-  <name>Task 1: Create User model</name>
-  <files>src/features/user/model.ts</files>
-  <action>Define User type with id, email, name, createdAt. Export TypeScript interface.</action>
-  <verify>tsc --noEmit passes</verify>
-  <done>User type exported and usable</done>
-</task>
+- @.planning/PROJECT.md
+- @.planning/ROADMAP.md
+- @.planning/STATE.md
 
-<task type="auto">
-  <name>Task 2: Create User API endpoints</name>
-  <files>src/features/user/api.ts</files>
-  <action>GET /users (list), GET /users/:id (single), POST /users (create). Use User type from model.</action>
-  <verify>curl tests pass for all endpoints</verify>
-  <done>All CRUD operations work</done>
-</task>
-</tasks>
+## Tasks
 
-<verification>
-- [ ] npm run build succeeds
+### Task 1: Create User model
+
+**Type:** `auto`
+**Files:** `src/features/user/model.ts`
+**Action:**
+- Define `User` type with `id`, `email`, `name`, `createdAt`.
+- Export TypeScript interface/type from the module.
+**Verify:**
+- `tsc --noEmit` passes
+**Done When:**
+- User type is exported and used by API layer
+
+### Task 2: Create User API endpoints
+
+**Type:** `auto`
+**Files:** `src/features/user/api.ts`
+**Action:**
+- Implement `GET /users` (list), `GET /users/:id` (single), `POST /users` (create).
+- Use `User` type from the model.
+**Verify:**
+- Curl tests pass for all endpoints
+**Done When:**
+- All required endpoints respond correctly
+
+## Verification
+
+- [ ] `npm run build` succeeds
 - [ ] API endpoints respond correctly
-</verification>
 
-<success_criteria>
+## Success Criteria
+
 - All tasks completed
 - User feature works end-to-end
-</success_criteria>
 
-<output>
+## Output
+
 After completion, create `.planning/phases/03-features/03-01-SUMMARY.md`
-</output>
 ```
 
 **Plan with checkpoint (non-autonomous):**
@@ -364,62 +383,74 @@ files_modified: [src/components/Dashboard.tsx]
 autonomous: false
 ---
 
-<objective>
+## Objective
+
 Build dashboard with visual verification.
 
-Purpose: Integrate user and product features into unified view.
+Purpose: Integrate user and product features into a unified view.
 Output: Working dashboard component.
-</objective>
 
-<execution_context>
-@~/.config/opencode/get-shit-done/workflows/execute-plan.md
-@~/.config/opencode/get-shit-done/templates/summary.md
-@~/.config/opencode/get-shit-done/references/checkpoints.md
-</execution_context>
+## Execution Context
 
-<context>
-@.planning/PROJECT.md
-@.planning/ROADMAP.md
-@.planning/phases/03-features/03-01-SUMMARY.md
-@.planning/phases/03-features/03-02-SUMMARY.md
-</context>
+- @~/.config/opencode/get-shit-done/workflows/execute-plan.md
+- @~/.config/opencode/get-shit-done/templates/summary.md
+- @~/.config/opencode/get-shit-done/references/checkpoints.md
 
-<tasks>
-<task type="auto">
-  <name>Task 1: Build Dashboard layout</name>
-  <files>src/components/Dashboard.tsx</files>
-  <action>Create responsive grid with UserList and ProductList components. Use Tailwind for styling.</action>
-  <verify>npm run build succeeds</verify>
-  <done>Dashboard renders without errors</done>
-</task>
+## Context
 
-<!-- Checkpoint pattern: assistant starts server, user visits URL. See checkpoints.md for full patterns. -->
-<task type="auto">
-  <name>Start dev server</name>
-  <action>Run `npm run dev` in background, wait for ready</action>
-  <verify>curl localhost:3000 returns 200</verify>
-</task>
+- @.planning/PROJECT.md
+- @.planning/ROADMAP.md
+- @.planning/phases/03-features/03-01-SUMMARY.md
+- @.planning/phases/03-features/03-02-SUMMARY.md
 
-<task type="checkpoint:human-verify" gate="blocking">
-  <what-built>Dashboard - server at http://localhost:3000</what-built>
-  <how-to-verify>Visit localhost:3000/dashboard. Check: desktop grid, mobile stack, no scroll issues.</how-to-verify>
-  <resume-signal>Type "approved" or describe issues</resume-signal>
-</task>
-</tasks>
+## Tasks
 
-<verification>
-- [ ] npm run build succeeds
+### Task 1: Build Dashboard layout
+
+**Type:** `auto`
+**Files:** `src/components/Dashboard.tsx`
+**Action:**
+- Create responsive grid with `UserList` and `ProductList` components.
+- Use Tailwind for styling.
+**Verify:**
+- `npm run build` succeeds
+**Done When:**
+- Dashboard renders without errors
+
+### Task 2: Start dev server
+
+**Type:** `auto`
+**Files:** (none)
+**Action:**
+- Run `npm run dev` in background and wait until ready.
+**Verify:**
+- `curl localhost:3000` returns 200
+**Done When:**
+- Dev server is running locally
+
+### Task 3: Human verification - dashboard layout
+
+**Type:** `checkpoint:human-verify`
+**Gate:** `blocking`
+**What Built:** Dashboard server at http://localhost:3000
+**How To Verify:**
+1. Visit `http://localhost:3000/dashboard`
+2. Check: desktop grid, mobile stack, no scroll issues
+**Resume Signal:** Reply with `approved` or describe layout issues.
+
+## Verification
+
+- [ ] `npm run build` succeeds
 - [ ] Visual verification passed
-</verification>
 
-<success_criteria>
+## Success Criteria
+
 - All tasks completed
 - User approved visual layout
-</success_criteria>
 
-<output>
+## Output
+
 After completion, create `.planning/phases/03-features/03-03-SUMMARY.md`
-</output>
 ```
 
 ---
@@ -447,18 +478,19 @@ files_modified: [...]
 ```
 
 **Bad: Vague tasks**
-```xml
-<task type="auto">
-  <name>Set up authentication</name>
-  <action>Add auth to the app</action>
-</task>
+```markdown
+### Task 1: Set up authentication
+
+**Type:** `auto`
+**Action:**
+- Add auth to the app
 ```
 
 ---
 
 ## Guidelines
 
-- Always use XML structure for assistant parsing
+- Always use this Markdown plan schema: required `##` sections + `### Task N:` blocks + `**Key:**` fields
 - Include `wave`, `depends_on`, `files_modified`, `autonomous` in every plan
 - Prefer vertical slices over horizontal layers
 - Only reference prior SUMMARYs when genuinely needed

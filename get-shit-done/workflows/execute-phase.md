@@ -135,7 +135,7 @@ Execute each wave in sequence. Autonomous plans within a wave run in parallel.
 
 1. **Describe what's being built (BEFORE spawning):**
 
-   Read each plan's `<objective>` section. Extract what's being built and why it matters.
+   Read each plan's `## Objective` section. Extract what's being built and why it matters.
 
    **Output:**
    ```
@@ -175,7 +175,7 @@ Execute each wave in sequence. Autonomous plans within a wave run in parallel.
    <objective>
    Execute plan {plan_number} of phase {phase_number}-{phase_name}.
 
-   Commit each task atomically. Create SUMMARY.md. Update STATE.md.
+   Commit each task atomically if commits are requested. Create SUMMARY.md. Update STATE.md.
    </objective>
 
    <execution_context>
@@ -198,7 +198,7 @@ Execute each wave in sequence. Autonomous plans within a wave run in parallel.
 
    <success_criteria>
    - [ ] All tasks executed
-   - [ ] Each task committed individually
+   - [ ] Each task committed individually (if commits requested)
    - [ ] SUMMARY.md created in plan directory
    - [ ] STATE.md updated with position and decisions
    </success_criteria>
@@ -267,7 +267,7 @@ Plans with `autonomous: false` require user interaction.
 
 2. **Agent runs until checkpoint:**
    - Executes auto tasks normally
-   - Reaches checkpoint task (e.g., `type="checkpoint:human-verify"`) or auth gate
+- Reaches checkpoint task (e.g., Type `checkpoint:human-verify`) or auth gate
    - Agent returns with structured checkpoint (see checkpoint-return.md template)
 
 3. **Agent return includes (structured format):**

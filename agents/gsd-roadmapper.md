@@ -1,6 +1,6 @@
 ---
 description: Creates project roadmaps with phase breakdown, requirement mapping, success criteria derivation, and coverage validation. Spawned by /gsd-new-project orchestrator.
-model: openai/gpt-5.2-high
+model: openai/gpt-5.2
 color: "#800080"
 tools:
   read: true

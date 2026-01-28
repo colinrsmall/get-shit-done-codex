@@ -18,15 +18,19 @@ This version is OpenCode-first: Claude-era coupling has been removed, and planni
 
 Copy these folders into your OpenCode config directory:
 
-- `commands/` → `~/.config/opencode/commands/`
+- `commands/` → `~/.config/opencode/command/`
 - `agents/` → `~/.config/opencode/agents/`
 - `get-shit-done/` → `~/.config/opencode/get-shit-done/`
+- `hooks/` → `~/.config/opencode/hooks/` (optional)
 
 Example:
 
 ```bash
-mkdir -p ~/.config/opencode
-cp -R commands agents get-shit-done ~/.config/opencode/
+mkdir -p ~/.config/opencode/{command,agents,get-shit-done,hooks}
+cp -R commands/* ~/.config/opencode/command/
+cp -R agents/* ~/.config/opencode/agents/
+cp -R get-shit-done/* ~/.config/opencode/get-shit-done/
+cp -R hooks/* ~/.config/opencode/hooks/
 ```
 
 Restart OpenCode, then run:
@@ -75,6 +79,18 @@ GSD now treats planning as a deliberate, user-reviewed loop instead of auto-appr
 
 ---
 
+## Plan Format (New)
+
+Plan files (`.planning/phases/*/*-PLAN.md`) are now pure Markdown (no XML task tags) and are designed to be both human-readable and machine-readable:
+
+- Machine-readable: YAML frontmatter (wave, depends_on, files_modified, autonomous, must_haves)
+- Human-readable: required Markdown sections (`## Objective`, `## Tasks`, `## Verification`, ...)
+- Tasks: each task is a `### Task N:` block with required `**Type:**`, `**Action:**`, `**Verify:**`, and `**Done When:**` fields (plus checkpoint-specific fields)
+
+Canonical template: `get-shit-done/templates/phase-prompt.md`
+
+---
+
 ## Commit Policy
 
 - `.planning/` artifacts are never committed.
@@ -104,6 +120,7 @@ GSD now treats planning as a deliberate, user-reviewed loop instead of auto-appr
 - Core rules updated for GPT‑5.2/Codex: no upfront plans, scope discipline, parallel reads.
 - Docs/templates consolidated: canonical codebase templates used; large inline examples moved to references.
 - Removed outdated docs (`planning-config.md`, `ui-brand.md`) and replaced with canonical references.
+- Plan format updated: `*-PLAN.md` files now use Markdown sections and task blocks (no XML task tags).
 
 ---
 
@@ -112,7 +129,7 @@ GSD now treats planning as a deliberate, user-reviewed loop instead of auto-appr
 Commands not found?
 
 - Restart OpenCode
-- Verify files exist under `~/.config/opencode/commands/` (e.g. `gsd-help.md`)
+- Verify files exist under `~/.config/opencode/command/` (e.g. `gsd-help.md`)
 
 ---
 

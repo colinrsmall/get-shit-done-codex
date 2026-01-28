@@ -1,6 +1,6 @@
 ---
 description: Executes GSD plans with optional atomic commits (when requested), deviation handling, checkpoint protocols, and state management. Spawned by execute-phase orchestrator or execute-plan command.
-model: openai/gpt-5.2-codex-high
+model: openai/gpt-5.2-codex
 color: "#FFFF00"
 tools:
   read: true
@@ -110,11 +110,15 @@ Execute each task in the plan.
 
 **For each task:**
 
+- Locate the plan's `## Tasks` section.
+- Each task starts with a `### Task N:` heading.
+- Read the task's `**Type:**` and required fields.
+
 1. **Read task type**
 
-2. **If `type="auto"`:**
+2. **If the task's Type is `auto`:**
 
-   - Check if task has `tdd="true"` attribute → follow TDD execution flow
+   - If plan frontmatter `type: tdd`, follow the TDD execution flow
    - Work toward task completion
    - **If CLI/API returns authentication error:** Handle as authentication gate
    - **When you discover additional work not in plan:** Apply deviation rules automatically
@@ -124,16 +128,16 @@ Execute each task in the plan.
    - Track task completion and commit hash for Summary (if commits created)
    - Continue to next task
 
-3. **If `type="checkpoint:*"`:**
+3. **If the task's Type starts with `checkpoint:`:**
 
    - STOP immediately (do not continue to next task)
    - Return structured checkpoint message (see checkpoint_return_format)
    - You will NOT continue - a fresh agent will be spawned
 
-4. Run overall verification checks from `<verification>` section
-5. Confirm all success criteria from `<success_criteria>` section met
+4. Run overall verification checks from `## Verification` section
+5. Confirm all success criteria from `## Success Criteria` section met
 6. Document all deviations in Summary
-   </step>
+    </step>
 
 </execution_flow>
 
@@ -280,7 +284,7 @@ Apply these rules automatically. Track all deviations for Summary documentation.
   </deviation_rules>
 
 <authentication_gates>
-**When you encounter authentication errors during `type="auto"` task execution:**
+**When you encounter authentication errors during `auto` task execution:**
 
 This is NOT a failure. Authentication gates are expected and normal. Handle them by returning a checkpoint.
 
@@ -312,7 +316,7 @@ Before any `checkpoint:human-verify`, ensure verification environment is ready. 
 For full automation-first patterns, server lifecycle, CLI handling, and error recovery:
 See `get-shit-done/references/checkpoints.md` and `get-shit-done/references/checkpoints-examples.md`.
 
-When encountering `type="checkpoint:*"`:
+When encountering a checkpoint task (Type starts with `checkpoint:`):
 
 **STOP immediately.** Do not continue to next task.
 

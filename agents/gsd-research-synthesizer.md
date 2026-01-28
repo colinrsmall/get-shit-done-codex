@@ -1,6 +1,6 @@
 ---
 description: Synthesizes research outputs from parallel researcher agents into SUMMARY.md. Spawned by /gsd-new-project after 4 researcher agents complete.
-model: openai/gpt-5.2-high
+model: openai/gpt-5.2
 color: "#800080"
 tools:
   read: true

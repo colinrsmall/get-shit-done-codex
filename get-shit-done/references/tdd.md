@@ -18,7 +18,7 @@ TDD is about design quality, not coverage metrics. The red-green-refactor cycle 
 - State machines and workflows
 - Utility functions with clear specifications
 
-**Skip TDD (use standard plan with `type="auto"` tasks):**
+**Skip TDD (use a standard plan with `auto` tasks):**
 - UI layout, styling, visual components
 - Configuration changes
 - Glue code connecting existing components
@@ -41,48 +41,65 @@ Each TDD plan implements **one feature** through the full RED-GREEN-REFACTOR cyc
 phase: XX-name
 plan: NN
 type: tdd
+wave: N
+depends_on: []
+files_modified: []
+autonomous: true
+
+must_haves:
+  truths: []
+  artifacts: []
+  key_links: []
 ---
 
-<objective>
+## Objective
+
 [What feature and why]
+
 Purpose: [Design benefit of TDD for this feature]
 Output: [Working, tested feature]
-</objective>
 
-<context>
-@.planning/PROJECT.md
-@.planning/ROADMAP.md
-@relevant/source/files.ts
-</context>
+## Context
 
-<feature>
-  <name>[Feature name]</name>
-  <files>[source file, test file]</files>
-  <behavior>
-    [Expected behavior in testable terms]
-    Cases: input → expected output
-  </behavior>
-  <implementation>[How to implement once tests pass]</implementation>
-</feature>
+- @.planning/PROJECT.md
+- @.planning/ROADMAP.md
+- @relevant/source/files.ts
 
-<verification>
-[Test command that proves feature works]
-</verification>
+## Feature
 
-<success_criteria>
-- Failing test written and committed
-- Implementation passes test
+**Name:** [Feature name]
+**Files:** `[source file]`, `[test file]`
+
+### Behavior
+
+[Expected behavior in testable terms]
+
+Cases:
+- [input] -> [expected output]
+- [input] -> [expected output]
+
+### Implementation Notes
+
+[How to implement once tests pass]
+
+## Verification
+
+- [ ] [Test command that proves feature works]
+
+## Success Criteria
+
+- Failing test written
+- Implementation passes the test
 - Refactor complete (if needed)
-- All 2-3 commits present
-</success_criteria>
+- If commits are requested, 2-3 commits present (test/feat/refactor)
 
-<output>
+## Output
+
 After completion, create SUMMARY.md with:
 - RED: What test was written, why it failed
 - GREEN: What implementation made it pass
 - REFACTOR: What cleanup was done (if any)
-- Commits: List of commits produced
-</output>
+- Commits: List of commits produced (if any)
 ```
 
 **One feature per TDD plan.** If features are trivial enough to batch, they're trivial enough to skip TDD—use a standard plan and add tests after.
@@ -93,7 +110,7 @@ After completion, create SUMMARY.md with:
 
 **RED - Write failing test:**
 1. Create test file following project conventions
-2. Write test describing expected behavior (from `<behavior>` element)
+2. Write test describing expected behavior (from the plan's Behavior section)
 3. Run test - it MUST fail
 4. If test passes: feature exists or test is wrong. Investigate.
 5. If commits are requested: `test({phase}-{plan}): add failing test for [feature]`

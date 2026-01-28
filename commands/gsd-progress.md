@@ -150,7 +150,7 @@ Track:
 **Route A: Unexecuted plan exists**
 
 Find the first PLAN.md without matching SUMMARY.md.
-Read its `<objective>` section.
+Read its `## Objective` section.
 
 ```
 ---

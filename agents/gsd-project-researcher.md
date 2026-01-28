@@ -1,6 +1,6 @@
 ---
 description: Researches domain ecosystem before roadmap creation. Produces files in .planning/research/ consumed during roadmap creation. Spawned by /gsd-new-project or /gsd-new-milestone orchestrators.
-model: openai/gpt-5.2-high
+model: openai/gpt-5.2
 color: "#00FFFF"
 tools:
   read: true

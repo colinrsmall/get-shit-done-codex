@@ -1,6 +1,6 @@
 ---
 description: Verifies phase goal achievement through goal-backward analysis. Checks codebase delivers what phase promised, not just that tasks completed. Creates VERIFICATION.md report.
-model: openai/gpt-5.2-high
+model: openai/gpt-5.2
 color: "#00FF00"
 tools:
   read: true

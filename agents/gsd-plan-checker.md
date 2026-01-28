@@ -1,6 +1,6 @@
 ---
 description: Verifies plans will achieve phase goal before execution. Goal-backward analysis of plan quality. Spawned by /gsd-plan-phase orchestrator.
-model: openai/gpt-5.2-high
+model: openai/gpt-5.2
 color: "#00FF00"
 tools:
   read: true
@@ -83,32 +83,34 @@ issue:
 **Question:** Does every task have Files + Action + Verify + Done?
 
 **Process:**
-1. Parse each `<task>` element in PLAN.md
-2. Check for required fields based on task type
+1. Parse each `### Task N:` block in PLAN.md
+2. Read `**Type:**` and validate required keys
 3. Flag incomplete tasks
 
 **Required by task type:**
 | Type | Files | Action | Verify | Done |
 |------|-------|--------|--------|------|
-| `auto` | Required | Required | Required | Required |
+| `auto` | Required* | Required | Required | Required |
 | `checkpoint:*` | N/A | N/A | N/A | N/A |
-| `tdd` | Required | Behavior + Implementation | Test commands | Expected outcomes |
+| `tdd` | Required* | Behavior + Implementation | Test commands | Expected outcomes |
+
+\* Files may be `(none)` for command-only tasks (e.g., starting a dev server).
 
 **Red flags:**
-- Missing `<verify>` — can't confirm completion
-- Missing `<done>` — no acceptance criteria
-- Vague `<action>` — "implement auth" instead of specific steps
-- Empty `<files>` — what gets created?
+- Missing `**Verify:**` — can't confirm completion
+- Missing `**Done When:**` — no acceptance criteria
+- Vague `**Action:**` — "implement auth" instead of specific steps
+- Missing `**Files:**` — unclear what is modified (use `(none)` if applicable)
 
 **Example issue:**
 ```yaml
 issue:
   dimension: task_completeness
   severity: blocker
-  description: "Task 2 missing <verify> element"
+  description: "Task 2 missing Verify section"
   plan: "16-01"
   task: 2
-  fix_hint: "Add verification command for build output"
+  fix_hint: "Add **Verify:** with a runnable command or concrete check"
 ```
 
 ## Dimension 3: Dependency Correctness
@@ -331,10 +333,12 @@ For each task, verify required fields exist.
 
 ```bash
 # Count tasks and check structure
-grep -c "<task" "$PHASE_DIR"/*-PLAN.md
+rg -n "^### Task " "$PHASE_DIR"/*-PLAN.md
 
-# Check for missing verify elements
-grep -B5 "</task>" "$PHASE_DIR"/*-PLAN.md | grep -v "<verify>"
+# Look for missing required sections in auto tasks
+rg -n "^\*\*Type:\*\* `auto`" "$PHASE_DIR"/*-PLAN.md
+rg -n "^\*\*Verify:\*\*" "$PHASE_DIR"/*-PLAN.md
+rg -n "^\*\*Done When:\*\*" "$PHASE_DIR"/*-PLAN.md
 ```
 
 **Check:**
@@ -388,7 +392,7 @@ Evaluate scope against context budget.
 **Metrics per plan:**
 ```bash
 # Count tasks
-grep -c "<task" "$PHASE_DIR"/${PHASE}-01-PLAN.md
+rg -c "^### Task " "$PHASE_DIR"/${PHASE}-01-PLAN.md
 
 # Count files in files_modified
 grep "files_modified:" "$PHASE_DIR"/${PHASE}-01-PLAN.md
@@ -502,19 +506,20 @@ issue:
 ## Example 3: Task Missing Verification
 
 **Task in Plan 01:**
-```xml
-<task type="auto">
-  <name>Task 2: Create login endpoint</name>
-  <files>src/app/api/auth/login/route.ts</files>
-  <action>POST endpoint accepting {email, password}, validates using bcrypt...</action>
-  <!-- Missing <verify> -->
-  <done>Login works with valid credentials</done>
-</task>
+```markdown
+### Task 2: Create login endpoint
+
+**Type:** `auto`
+**Files:** `src/app/api/auth/login/route.ts`
+**Action:**
+- Implement POST endpoint accepting `{email, password}` and validating using bcrypt...
+**Done When:**
+- Login works with valid credentials
 ```
 
 **Analysis:**
 - Task has files, action, done
-- Missing `<verify>` element
+- Missing `**Verify:**` section
 - Cannot confirm task completion programmatically
 
 **Issue:**
@@ -522,11 +527,11 @@ issue:
 issue:
   dimension: task_completeness
   severity: blocker
-  description: "Task 2 missing <verify> element"
+  description: "Task 2 missing Verify section"
   plan: "01"
   task: 2
   task_name: "Create login endpoint"
-  fix_hint: "Add <verify> with curl command or test command to confirm endpoint works"
+  fix_hint: "Add **Verify:** with curl or a test command to confirm the endpoint works"
 ```
 
 ## Example 4: Scope Exceeded
@@ -582,7 +587,7 @@ issue:
   plan: "16-01"              # Which plan (null if phase-level)
   dimension: "task_completeness"  # Which dimension failed
   severity: "blocker"        # blocker | warning | info
-  description: "Task 2 missing <verify> element"
+  description: "Task 2 missing Verify section"
   task: 2                    # Task number if applicable
   fix_hint: "Add verification command for build output"
 ```
@@ -614,7 +619,7 @@ issues:
   - plan: "01"
     dimension: "task_completeness"
     severity: "blocker"
-    description: "Task 2 missing <verify> element"
+    description: "Task 2 missing Verify section"
     fix_hint: "Add verification command"
 
   - plan: "01"
@@ -700,7 +705,7 @@ issues:
   - plan: "01"
     dimension: "task_completeness"
     severity: "blocker"
-    description: "Task 2 missing <verify> element"
+    description: "Task 2 missing Verify section"
     fix_hint: "Add verification command"
 ```
 

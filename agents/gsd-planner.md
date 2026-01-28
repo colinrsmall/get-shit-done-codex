@@ -1,6 +1,6 @@
 ---
 description: Creates executable phase plans with task breakdown, dependency analysis, and goal-backward verification. Spawned by /gsd-plan-phase orchestrator.
-model: openai/gpt-5.2-high
+model: openai/gpt-5.2
 color: "#00FF00"
 tools:
   read: true
@@ -139,19 +139,19 @@ For niche domains (3D, games, audio, shaders, ML), suggest `/gsd-research-phase`
 
 Every task has four required fields:
 
-**<files>:** Exact file paths created or modified.
+**Files:** Exact file paths created or modified.
 - Good: `src/app/api/auth/login/route.ts`, `prisma/schema.prisma`
 - Bad: "the auth files", "relevant components"
 
-**<action>:** Specific implementation instructions, including what to avoid and WHY.
+**Action:** Specific implementation instructions, including what to avoid and why.
 - Good: "Create POST endpoint accepting {email, password}, validates using bcrypt against User table, returns JWT in httpOnly cookie with 15-min expiry. Use jose library (not jsonwebtoken - CommonJS issues with Edge runtime)."
 - Bad: "Add authentication", "Make login work"
 
-**<verify>:** How to prove the task is complete.
+**Verify:** How to prove the task is complete.
 - Good: `npm test` passes, `curl -X POST /api/auth/login` returns 200 with Set-Cookie header
 - Bad: "It works", "Looks good"
 
-**<done>:** Acceptance criteria - measurable state of completion.
+**Done When:** Acceptance criteria - measurable state of completion.
 - Good: "Valid credentials return 200 + JWT cookie, invalid credentials return 401"
 - Bad: "Authentication is complete"
 
@@ -180,7 +180,7 @@ Each task should take the executor agent **15-60 minutes** to execute. This cali
 - Touches more than 3-5 files
 - Has multiple distinct "chunks" of work
 - You'd naturally take a break partway through
-- The <action> section is more than a paragraph
+- The Action section is more than a paragraph
 
 **Signals tasks should be combined:**
 - One task just sets up for the next
@@ -395,50 +395,55 @@ must_haves:
   key_links: []             # Critical connections
 ---
 
-<objective>
+## Objective
+
 [What this plan accomplishes]
 
 Purpose: [Why this matters for the project]
 Output: [What artifacts will be created]
-</objective>
 
-<execution_context>
-@~/.config/opencode/get-shit-done/workflows/execute-plan.md
-@~/.config/opencode/get-shit-done/templates/summary.md
-</execution_context>
+## Execution Context
 
-<context>
-@.planning/PROJECT.md
-@.planning/ROADMAP.md
-@.planning/STATE.md
+- @~/.config/opencode/get-shit-done/workflows/execute-plan.md
+- @~/.config/opencode/get-shit-done/templates/summary.md
+- If this plan contains any checkpoint tasks, also include:
+  - @~/.config/opencode/get-shit-done/references/checkpoints.md
 
-# Only reference prior plan SUMMARYs if genuinely needed
-@path/to/relevant/source.ts
-</context>
+## Context
 
-<tasks>
+- @.planning/PROJECT.md
+- @.planning/ROADMAP.md
+- @.planning/STATE.md
 
-<task type="auto">
-  <name>Task 1: [Action-oriented name]</name>
-  <files>path/to/file.ext</files>
-  <action>[Specific implementation]</action>
-  <verify>[Command or check]</verify>
-  <done>[Acceptance criteria]</done>
-</task>
+Only reference prior plan SUMMARYs if genuinely needed.
 
-</tasks>
+Relevant source files (only if needed):
+- @path/to/relevant/source.ts
 
-<verification>
-[Overall phase checks]
-</verification>
+## Tasks
 
-<success_criteria>
-[Measurable completion]
-</success_criteria>
+### Task 1: [Action-oriented name]
 
-<output>
+**Type:** `auto`
+**Files:** `path/to/file.ext`
+**Action:**
+- [Specific implementation]
+**Verify:**
+- `[Command or check]`
+**Done When:**
+- [Acceptance criteria]
+
+## Verification
+
+- [ ] [Overall phase checks]
+
+## Success Criteria
+
+- [Measurable completion]
+
+## Output
+
 After completion, create `.planning/phases/XX-name/{phase}-{plan}-SUMMARY.md`
-</output>
 ```
 
 ## Frontmatter Fields
@@ -650,19 +655,19 @@ Cluster related gaps by:
 
 **6. Create gap closure tasks:**
 
-```xml
-<task name="{fix_description}" type="auto">
-  <files>{artifact.path}</files>
-  <action>
-    {For each item in gap.missing:}
-    - {missing item}
+```markdown
+### Task N: {fix_description}
 
-    Reference existing code: {from SUMMARYs}
-    Gap reason: {gap.reason}
-  </action>
-  <verify>{How to confirm gap is closed}</verify>
-  <done>{Observable truth now achievable}</done>
-</task>
+**Type:** `auto`
+**Files:** `{artifact.path}`
+**Action:**
+- {For each item in gap.missing:} {missing item}
+- Reference existing code: {from SUMMARYs}
+- Gap reason: {gap.reason}
+**Verify:**
+- {How to confirm gap is closed}
+**Done When:**
+- {Observable truth now achievable}
 ```
 
 **7. Write PLAN.md files:**
@@ -712,7 +717,7 @@ issues:
   - plan: "16-01"
     dimension: "task_completeness"
     severity: "blocker"
-    description: "Task 2 missing <verify> element"
+    description: "Task 2 missing Verify section"
     fix_hint: "Add verification command for build output"
 ```
 
@@ -768,7 +773,7 @@ After making edits, self-check:
 
 | Plan | Change | Issue Addressed |
 |------|--------|-----------------|
-| 16-01 | Added <verify> to Task 2 | task_completeness |
+| 16-01 | Added Verify section to Task 2 | task_completeness |
 | 16-02 | Added logout task | requirement_coverage (AUTH-02) |
 
 ### Files Updated
@@ -1142,7 +1147,7 @@ Phase planning complete when:
 - [ ] Prior decisions, issues, concerns synthesized
 - [ ] Dependency graph built (needs/creates for each task)
 - [ ] Tasks grouped into plans by wave, not by sequence
-- [ ] PLAN file(s) exist with XML structure
+- [ ] PLAN file(s) follow the Markdown plan schema (required sections + task blocks)
 - [ ] Each plan: depends_on, files_modified, autonomous, must_haves in frontmatter
 - [ ] Each plan: user_setup declared if external services involved
 - [ ] Each plan: Objective, context, tasks, verification, success criteria, output

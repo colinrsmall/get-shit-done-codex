@@ -1,6 +1,6 @@
 ---
 description: Researches how to implement a phase before planning. Produces RESEARCH.md consumed by gsd-planner. Spawned by /gsd-plan-phase orchestrator.
-model: openai/gpt-5.2-high
+model: openai/gpt-5.2
 color: "#00FFFF"
 tools:
   read: true

@@ -78,13 +78,17 @@ Typically use outer XML containers related to filename, but structure varies.
 Examples:
 - `principles.md` → `<principles>...</principles>`
 - `checkpoints.md` → `<overview>` then `<checkpoint_types>`
-- `plan-format.md` → `<overview>` then `<core_principle>`
+- `phase-prompt.md` → canonical PLAN.md schema (Markdown sections + task blocks)
 
 Internal organization varies — semantic sub-containers, markdown headers within XML, code examples.
 
 ---
 
-## XML Tag Conventions
+## Tag Conventions (Commands/Workflows)
+
+Commands and workflows use semantic tags (e.g., `<objective>`, `<execution_context>`) as lightweight containers.
+
+**Plan files are different:** `*-PLAN.md` files are pure Markdown sections and task blocks (no XML tags). See `get-shit-done/templates/phase-prompt.md`.
 
 ### Semantic Containers Only
 
@@ -113,42 +117,46 @@ Build authentication system
 
 ### Task Structure
 
-```xml
-<task type="auto">
-  <name>Task N: Action-oriented name</name>
-  <files>src/path/file.ts, src/other/file.ts</files>
-  <action>What to do, what to avoid and WHY</action>
-  <verify>Command or check to prove completion</verify>
-  <done>Measurable acceptance criteria</done>
-</task>
+```markdown
+### Task N: Action-oriented name
+
+**Type:** `auto`
+**Files:** `src/path/file.ts`, `src/other/file.ts`
+**Action:**
+- What to do, what to avoid, and why
+**Verify:**
+- `command or check to prove completion`
+**Done When:**
+- Measurable acceptance criteria
 ```
 
 **Task types:**
-- `type="auto"` — assistant executes autonomously
-- `type="checkpoint:human-verify"` — User must verify
-- `type="checkpoint:decision"` — User must choose
+- `auto` — assistant executes autonomously
+- `checkpoint:human-verify` — User must verify
+- `checkpoint:decision` — User must choose
 
 ### Checkpoint Structure
 
-```xml
-<task type="checkpoint:human-verify" gate="blocking">
-  <what-built>Description of what was built</what-built>
-  <how-to-verify>Numbered steps for user</how-to-verify>
-  <resume-signal>Text telling user how to continue</resume-signal>
-</task>
+```markdown
+### Task N: Human verification - short name
 
-<task type="checkpoint:decision" gate="blocking">
-  <decision>What needs deciding</decision>
-  <context>Why this matters</context>
-  <options>
-    <option id="identifier">
-      <name>Option Name</name>
-      <pros>Benefits</pros>
-      <cons>Tradeoffs</cons>
-    </option>
-  </options>
-  <resume-signal>Selection instruction</resume-signal>
-</task>
+**Type:** `checkpoint:human-verify`
+**Gate:** `blocking`
+**What Built:** Description of what was built (URL: http://localhost:3000)
+**How To Verify:**
+1. Numbered steps for user
+**Resume Signal:** Reply with `approved` or describe issues.
+
+### Task N: Decision - short name
+
+**Type:** `checkpoint:decision`
+**Gate:** `blocking`
+**Decision Needed:** What needs deciding
+**Context:** Why this matters
+**Options:**
+- `option-a`: Pros: benefits. Cons: tradeoffs.
+- `option-b`: Pros: benefits. Cons: tradeoffs.
+**Resume Signal:** Select `option-a` or `option-b`.
 ```
 
 ### Conditional Logic
@@ -191,7 +199,7 @@ Build authentication system
 | XML tags | kebab-case | `<execution_context>` |
 | Step names | snake_case | `name="load_project_state"` |
 | Bash variables | CAPS_UNDERSCORES | `PHASE_ARG`, `PLAN_START_TIME` |
-| Type attributes | colon separator | `type="checkpoint:human-verify"` |
+| Task types | colon separator | `checkpoint:human-verify` |
 
 ---
 
@@ -264,26 +272,36 @@ Use subagents for autonomous work. Reserve main context for user interaction.
 
 **DON'T:** `<section>`, `<item>`, `<content>`
 
-**DO:** Semantic purpose tags: `<objective>`, `<verification>`, `<action>`
+**DO:**
+- Commands/workflows: semantic purpose tags like `<objective>`, `<execution_context>`, `<process>`
+- Plan files: Markdown sections (`## Objective`, `## Tasks`, `## Verification`) and task blocks (see `get-shit-done/templates/phase-prompt.md`)
 
 ### Vague Tasks (Banned)
 
-```xml
+```markdown
 <!-- BAD -->
-<task type="auto">
-  <name>Add authentication</name>
-  <action>Implement auth</action>
-  <verify>???</verify>
-</task>
+### Task N: Add authentication
+
+**Type:** `auto`
+**Action:**
+- Implement auth
+**Verify:**
+- ???
 
 <!-- GOOD -->
-<task type="auto">
-  <name>Create login endpoint with JWT</name>
-  <files>src/app/api/auth/login/route.ts</files>
-  <action>POST endpoint accepting {email, password}. Query User by email, compare password with bcrypt. On match, create JWT with jose library, set as httpOnly cookie. Return 200. On mismatch, return 401.</action>
-  <verify>curl -X POST localhost:3000/api/auth/login returns 200 with Set-Cookie header</verify>
-  <done>Valid credentials → 200 + cookie. Invalid → 401.</done>
-</task>
+### Task N: Create login endpoint with JWT
+
+**Type:** `auto`
+**Files:** `src/app/api/auth/login/route.ts`
+**Action:**
+- Implement POST endpoint accepting `{email, password}`.
+- Query `User` by email and compare password with bcrypt.
+- On match: create JWT with jose, set as httpOnly cookie, return 200.
+- On mismatch: return 401.
+**Verify:**
+- `curl -X POST localhost:3000/api/auth/login` returns 200 with `Set-Cookie` header
+**Done When:**
+- Valid credentials -> 200 + cookie; invalid -> 401
 ```
 
 ---
@@ -302,7 +320,7 @@ See `get-shit-done/references/continuation-format.md` for the canonical format a
 
 ### Decision Gates
 
-Prefer the question tool with concrete options. Avoid vague freeform prompts when choices are possible.
+Default to natural language dialogue. Use the question tool when you need a discrete decision to proceed.
 
 Include escape hatch: "Something else", "Let me describe"
 

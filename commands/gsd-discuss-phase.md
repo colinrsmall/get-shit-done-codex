@@ -15,9 +15,10 @@ Extract implementation decisions that downstream agents need — researcher and 
 
 **How it works:**
 1. Analyze the phase to identify gray areas (UI, UX, behavior, etc.)
-2. Present gray areas — user selects which to discuss
+2. Present gray areas — user chooses in natural language
 3. Deep-dive each selected area until satisfied
 4. Create CONTEXT.md with decisions that guide research and planning
+5. In interactive mode, review CONTEXT.md and revise based on user feedback
 
 **Output:** `{phase}-CONTEXT.md` — decisions clear enough that downstream agents can act without asking the user again
 </objective>
@@ -41,10 +42,11 @@ Phase number: $ARGUMENTS (required)
 1. Validate phase number (error if missing or not in roadmap)
 2. Check if CONTEXT.md exists (offer update/view/skip if yes)
 3. **Analyze phase** — Identify domain and generate phase-specific gray areas
-4. **Present gray areas** — Multi-select: which to discuss? (NO skip option)
-5. **Deep-dive each area** — 4 questions per area, then offer more/next
+4. **Present gray areas** — Ask which to discuss in natural language (use question tool only if needed)
+5. **Deep-dive each area** — probe until satisfied
 6. **Write CONTEXT.md** — Sections match areas discussed
-7. Offer next steps (research or plan)
+7. **Review CONTEXT.md** — mandatory in interactive mode, optional in yolo
+8. Offer next steps (research or plan)
 
 **CRITICAL: Scope guardrail**
 - Phase boundary from ROADMAP.md is FIXED
@@ -68,11 +70,8 @@ Generate 3-4 **phase-specific** gray areas, not generic categories.
 - If more → ask 4 more, check again
 - After all areas → "Ready to create context?"
 
-**Do NOT ask about (Assistant handles these):**
-- Technical implementation
-- Architecture choices
-- Performance concerns
-- Scope expansion
+**Default to user-facing decisions.** Avoid leading with deep technical implementation, architecture, or performance questions.
+If the user raises technical constraints or preferences, capture them.
 </process>
 
 <success_criteria>

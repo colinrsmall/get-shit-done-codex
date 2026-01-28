@@ -30,16 +30,6 @@ Normalize phase input in step 1 before any directory lookups.
 
 <process>
 
-## 0. Resolve Models
-
-Read explicit model for agent spawning:
-
-```bash
-researcher_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-phase-researcher"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-high")
-```
-
-Store resolved model for use in Task calls below.
-
 ## 1. Normalize and Validate Phase
 
 ```bash
@@ -141,7 +131,6 @@ Write to: .planning/phases/${PHASE}-{slug}/${PHASE}-RESEARCH.md
 Task(
   prompt=filled_prompt,
   subagent_type="gsd-phase-researcher",
-  model="{researcher_model}",
   description="Research Phase {phase}"
 )
 ```
@@ -175,7 +164,6 @@ Research file: @.planning/phases/${PHASE}-{slug}/${PHASE}-RESEARCH.md
 Task(
   prompt=continuation_prompt,
   subagent_type="gsd-phase-researcher",
-  model="{researcher_model}",
   description="Continue research Phase {phase}"
 )
 ```

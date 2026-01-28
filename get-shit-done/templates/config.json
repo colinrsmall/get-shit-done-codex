@@ -6,23 +6,6 @@
     "plan_check": true,
     "verifier": true
   },
-  "planning": {
-    "commit_docs": true,
-    "search_gitignored": false
-  },
-  "models": {
-    "gsd-planner": "openai/gpt-5.2-high",
-    "gsd-roadmapper": "openai/gpt-5.2-high",
-    "gsd-phase-researcher": "openai/gpt-5.2-high",
-    "gsd-project-researcher": "openai/gpt-5.2-high",
-    "gsd-research-synthesizer": "openai/gpt-5.2-high",
-    "gsd-plan-checker": "openai/gpt-5.2-high",
-    "gsd-verifier": "openai/gpt-5.2-high",
-    "gsd-integration-checker": "openai/gpt-5.2-high",
-    "gsd-codebase-mapper": "openai/gpt-5.2-high",
-    "gsd-executor": "openai/gpt-5.2-codex-high",
-    "gsd-debugger": "openai/gpt-5.2-codex-high"
-  },
   "parallelization": {
     "enabled": true,
     "plan_level": true,

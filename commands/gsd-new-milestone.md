@@ -26,7 +26,6 @@ This is the brownfield equivalent of new-project. The project exists, PROJECT.md
 
 <execution_context>
 @~/.config/opencode/get-shit-done/references/questioning.md
-@~/.config/opencode/get-shit-done/references/ui-brand.md
 @~/.config/opencode/get-shit-done/templates/project.md
 @~/.config/opencode/get-shit-done/templates/requirements.md
 </execution_context>
@@ -45,6 +44,7 @@ Milestone name: $ARGUMENTS (optional - will prompt if not provided)
 </context>
 
 <process>
+
 
 ## Phase 1: Load Context
 
@@ -103,35 +103,11 @@ Last activity: [today] — Milestone v[X.Y] started
 
 Keep Accumulated Context section (decisions, blockers) from previous milestone.
 
-## Phase 6: Cleanup and Commit
+## Phase 6: Cleanup
 
 Delete MILESTONE-CONTEXT.md if exists (consumed).
 
-Check planning config:
-```bash
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-If `COMMIT_PLANNING_DOCS=false`: Skip git operations
-
-If `COMMIT_PLANNING_DOCS=true` (default):
-```bash
-git add .planning/PROJECT.md .planning/STATE.md
-git commit -m "docs: start milestone v[X.Y] [Name]"
-```
-
-## Phase 6.5: Resolve Models
-
-Read explicit per-agent models for spawning:
-
-```bash
-researcher_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-project-researcher"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-high")
-synthesizer_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-research-synthesizer"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-high")
-roadmapper_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-roadmapper"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-high")
-```
-
-Store resolved models for use in Task calls below.
+Do not commit `.planning/` artifacts.
 
 ## Phase 7: Research Decision
 
@@ -143,15 +119,6 @@ Use question:
   - "Skip research" — I know what I need, go straight to requirements
 
 **If "Research first":**
-
-Display stage banner:
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► RESEARCHING
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Researching [new features] ecosystem...
-```
 
 Create research directory:
 ```bash
@@ -209,7 +176,7 @@ Your STACK.md feeds into roadmap creation. Be prescriptive:
 Write to: .planning/research/STACK.md
 Use template: ~/.config/opencode/get-shit-done/templates/research-project/STACK.md
 </output>
-", subagent_type="gsd-project-researcher", model="{researcher_model}", description="Stack research")
+", subagent_type="gsd-project-researcher", description="Stack research")
 
 Task(prompt="
 <research_type>
@@ -250,7 +217,7 @@ Your FEATURES.md feeds into requirements definition. Categorize clearly:
 Write to: .planning/research/FEATURES.md
 Use template: ~/.config/opencode/get-shit-done/templates/research-project/FEATURES.md
 </output>
-", subagent_type="gsd-project-researcher", model="{researcher_model}", description="Features research")
+", subagent_type="gsd-project-researcher", description="Features research")
 
 Task(prompt="
 <research_type>
@@ -292,7 +259,7 @@ Your ARCHITECTURE.md informs phase structure in roadmap. Include:
 Write to: .planning/research/ARCHITECTURE.md
 Use template: ~/.config/opencode/get-shit-done/templates/research-project/ARCHITECTURE.md
 </output>
-", subagent_type="gsd-project-researcher", model="{researcher_model}", description="Architecture research")
+", subagent_type="gsd-project-researcher", description="Architecture research")
 
 Task(prompt="
 <research_type>
@@ -330,7 +297,7 @@ Your PITFALLS.md prevents mistakes in roadmap/planning. For each pitfall:
 Write to: .planning/research/PITFALLS.md
 Use template: ~/.config/opencode/get-shit-done/templates/research-project/PITFALLS.md
 </output>
-", subagent_type="gsd-project-researcher", model="{researcher_model}", description="Pitfalls research")
+", subagent_type="gsd-project-researcher", description="Pitfalls research")
 ```
 
 After all 4 agents complete, spawn synthesizer to create SUMMARY.md:
@@ -354,14 +321,11 @@ Write to: .planning/research/SUMMARY.md
 Use template: ~/.config/opencode/get-shit-done/templates/research-project/SUMMARY.md
 Commit after writing.
 </output>
-", subagent_type="gsd-research-synthesizer", model="{synthesizer_model}", description="Synthesize research")
+", subagent_type="gsd-research-synthesizer", description="Synthesize research")
 ```
 
-Display research complete banner and key findings:
+Display key findings:
 ```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► RESEARCH COMPLETE ✓
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ## Key Findings
 
@@ -375,13 +339,6 @@ Files: `.planning/research/`
 **If "Skip research":** Continue to Phase 8.
 
 ## Phase 8: Define Requirements
-
-Display stage banner:
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► DEFINING REQUIREMENTS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
 
 **Load context:**
 
@@ -493,31 +450,9 @@ Does this capture what you're building? (yes / adjust)
 
 If "adjust": Return to scoping.
 
-**Commit requirements:**
-
-Check planning config (same pattern as Phase 6).
-
-If committing:
-```bash
-git add .planning/REQUIREMENTS.md
-git commit -m "$(cat <<'EOF'
-docs: define milestone v[X.Y] requirements
-
-[X] requirements across [N] categories
-EOF
-)"
-```
+Do not commit `.planning/` artifacts.
 
 ## Phase 9: Create Roadmap
-
-Display stage banner:
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► CREATING ROADMAP
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-◆ Spawning roadmapper...
-```
 
 **Determine starting phase number:**
 
@@ -559,7 +494,7 @@ Create roadmap for milestone v[X.Y]:
 
 Write files first, then return. This ensures artifacts persist even if context is lost.
 </instructions>
-", subagent_type="gsd-roadmapper", model="{roadmapper_model}", description="Create roadmap")
+", subagent_type="gsd-roadmapper", description="Create roadmap")
 ```
 
 **Handle roadmapper return:**
@@ -600,17 +535,17 @@ Success criteria:
 ---
 ```
 
-**CRITICAL: Ask for approval before committing:**
+**CRITICAL: Ask for approval before continuing:**
 
 Use question:
 - header: "Roadmap"
 - question: "Does this roadmap structure work for you?"
 - options:
-  - "Approve" — Commit and continue
+  - "Approve" — Continue
   - "Adjust phases" — Tell me what to change
   - "Review full file" — Show raw ROADMAP.md
 
-**If "Approve":** Continue to commit.
+**If "Approve":** Continue.
 
 **If "Adjust phases":**
 - Get user's adjustment notes
@@ -626,41 +561,20 @@ Use question:
   Update the roadmap based on feedback. Edit files in place.
   Return ROADMAP REVISED with changes made.
   </revision>
-  ", subagent_type="gsd-roadmapper", model="{roadmapper_model}", description="Revise roadmap")
+  ", subagent_type="gsd-roadmapper", description="Revise roadmap")
   ```
 - Present revised roadmap
 - Loop until user approves
 
 **If "Review full file":** Display raw `cat .planning/ROADMAP.md`, then re-ask.
 
-**Commit roadmap (after approval):**
-
-Check planning config (same pattern as Phase 6).
-
-If committing:
-```bash
-git add .planning/ROADMAP.md .planning/STATE.md .planning/REQUIREMENTS.md
-git commit -m "$(cat <<'EOF'
-docs: create milestone v[X.Y] roadmap ([N] phases)
-
-Phases:
-[N]. [phase-name]: [requirements covered]
-[N+1]. [phase-name]: [requirements covered]
-...
-
-All milestone requirements mapped to phases.
-EOF
-)"
-```
+Do not commit `.planning/` artifacts.
 
 ## Phase 10: Done
 
 Present completion with next steps:
 
 ```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► MILESTONE INITIALIZED ✓
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 **Milestone v[X.Y]: [Name]**
 
@@ -705,8 +619,7 @@ Present completion with next steps:
 - [ ] Roadmap files written immediately (not draft)
 - [ ] User feedback incorporated (if any)
 - [ ] ROADMAP.md created with phases continuing from previous milestone
-- [ ] All commits made (if planning docs committed)
 - [ ] User knows next step is `/gsd-discuss-phase [N]`
 
-**Atomic commits:** Each phase commits its artifacts immediately. If context is lost, artifacts persist.
+Do not commit `.planning/` artifacts.
 </success_criteria>

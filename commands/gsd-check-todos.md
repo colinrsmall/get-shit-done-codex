@@ -173,33 +173,10 @@ ls .planning/todos/pending/*.md 2>/dev/null | wc -l
 Update STATE.md "### Pending Todos" section if exists.
 </step>
 
-<step name="git_commit">
-If todo was moved to done/, commit the change:
+<step name="record_local">
+Do not commit `.planning/` artifacts.
 
-**Check planning config:**
-
-```bash
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations, log "Todo moved (not committed - planning.commit_docs: false)"
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
-```bash
-git add .planning/todos/done/[filename]
-git rm --cached .planning/todos/pending/[filename] 2>/dev/null || true
-[ -f .planning/STATE.md ] && git add .planning/STATE.md
-git commit -m "$(cat <<'EOF'
-docs: start work on todo - [title]
-
-Moved to done/, beginning implementation.
-EOF
-)"
-```
-
-Confirm: "Committed: docs: start work on todo - [title]"
+Confirm: "Saved locally: start work on todo - [title]"
 </step>
 
 </process>
@@ -223,5 +200,5 @@ Confirm: "Committed: docs: start work on todo - [title]"
 - [ ] Appropriate actions offered
 - [ ] Selected action executed
 - [ ] STATE.md updated if todo count changed
-- [ ] Changes committed to git (if todo moved to done/)
+- [ ] Changes recorded locally (if todo moved to done/)
 </success_criteria>

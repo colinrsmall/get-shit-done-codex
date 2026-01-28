@@ -1,35 +1,14 @@
 # Models
 
-GSD does not use profiles. Each orchestrator reads explicit model IDs from `.planning/config.json` and passes them into `Task(..., model="...")` when spawning subagents.
+GSD uses OpenCode agent configuration for model selection. Task calls do not accept per-call model overrides.
 
-## Config
+## Where models are set
 
-Set per-agent models in `.planning/config.json`:
+- OpenCode agent config (e.g., `opencode.json` or agent frontmatter) defines each agent's model.
+- Subagents inherit the invoking agent's model if they don't define one explicitly.
 
-```json
-{
-  "models": {
-    "gsd-planner": "openai/gpt-5.2-high",
-    "gsd-roadmapper": "openai/gpt-5.2-high",
-    "gsd-phase-researcher": "openai/gpt-5.2-high",
-    "gsd-project-researcher": "openai/gpt-5.2-high",
-    "gsd-research-synthesizer": "openai/gpt-5.2-high",
-    "gsd-plan-checker": "openai/gpt-5.2-high",
-    "gsd-verifier": "openai/gpt-5.2-high",
-    "gsd-integration-checker": "openai/gpt-5.2-high",
-    "gsd-codebase-mapper": "openai/gpt-5.2-high",
-    "gsd-executor": "openai/gpt-5.2-codex-high",
-    "gsd-debugger": "openai/gpt-5.2-codex-high"
-  }
-}
-```
+## Notes
 
-## Resolution Logic
-
-Orchestrators resolve the specific agent model(s) they need:
-
-```
-1. Read .planning/config.json
-2. Get models[<subagent_type>] (fall back to a default model ID if missing)
-3. Pass model parameter to Task call
-```
+- Models are defined in agent frontmatter (e.g., `agents/gsd-executor.md`).
+- Update agent definitions to change models; Task calls do not accept per-call model overrides.
+- Convention: coding agents use `openai/gpt-5.2-codex-high`, non-coding agents use `openai/gpt-5.2-high`.

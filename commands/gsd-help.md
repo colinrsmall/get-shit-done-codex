@@ -303,7 +303,7 @@ Configure workflow toggles interactively.
 
 Usage: `/gsd-settings`
 
-To change which models agents use, edit `.planning/config.json` `models`.
+To change which models agents use, edit agent headers in `agents/*.md`.
 
 ### Utility Commands
 
@@ -323,6 +323,7 @@ Usage: `/gsd-join-discord`
 ```
 .planning/
 ├── PROJECT.md            # Project vision
+├── PROJECT-REVIEW.md     # Decisions, assumptions, review notes
 ├── ROADMAP.md            # Current phase breakdown
 ├── STATE.md              # Project memory & context
 ├── config.json           # Workflow mode & gates
@@ -342,10 +343,12 @@ Usage: `/gsd-join-discord`
 └── phases/
     ├── 01-foundation/
     │   ├── 01-01-PLAN.md
-    │   └── 01-01-SUMMARY.md
+    │   ├── 01-01-SUMMARY.md
+    │   └── 01-REVIEW.md
     └── 02-core-features/
         ├── 02-01-PLAN.md
-        └── 02-01-SUMMARY.md
+        ├── 02-01-SUMMARY.md
+        └── 02-REVIEW.md
 ```
 
 ## Workflow Modes
@@ -368,16 +371,7 @@ Change anytime by editing `.planning/config.json`
 
 ## Planning Configuration
 
-Configure how planning artifacts are managed in `.planning/config.json`:
-
-**`planning.commit_docs`** (default: `true`)
-- `true`: Planning artifacts committed to git (standard workflow)
-- `false`: Planning artifacts kept local-only, not committed
-
-When `planning.commit_docs: false`:
-- Add `.planning/` to your `.gitignore`
-- Useful for OSS contributions, client projects, or keeping planning private
-- All planning files still work normally, just not tracked in git
+Configure workflow toggles in `.planning/config.json`:
 
 **`workflow.research`**, **`workflow.plan_check`**, **`workflow.verifier`** (defaults: `true`)
 - Toggle optional agents during planning/execution (or use `/gsd-settings`)
@@ -385,10 +379,6 @@ When `planning.commit_docs: false`:
 Example config:
 ```json
 {
-  "planning": {
-    "commit_docs": false,
-    "search_gitignored": false
-  },
   "workflow": {
     "research": true,
     "plan_check": true,

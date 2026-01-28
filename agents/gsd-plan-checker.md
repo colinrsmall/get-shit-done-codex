@@ -1,5 +1,6 @@
 ---
 description: Verifies plans will achieve phase goal before execution. Goal-backward analysis of plan quality. Spawned by /gsd-plan-phase orchestrator.
+model: openai/gpt-5.2-high
 color: "#00FF00"
 tools:
   read: true

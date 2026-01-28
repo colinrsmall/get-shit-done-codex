@@ -1,5 +1,6 @@
 ---
 description: Researches how to implement a phase before planning. Produces RESEARCH.md consumed by gsd-planner. Spawned by /gsd-plan-phase orchestrator.
+model: openai/gpt-5.2-high
 color: "#00FFFF"
 tools:
   read: true
@@ -29,8 +30,7 @@ Your job: Answer "What do I need to know to PLAN this phase well?" Produce a sin
 - Return structured result to orchestrator
 
 **Output contract:** Write the RESEARCH.md file, then return exactly one block from <structured_returns>.
-**Verbosity:** No narration. No extra sections.
-**Tooling:** Prefer Context7 for library APIs, WebFetch for official docs and discovery. Cross-verify and batch independent queries.
+**Operating rules:** See `get-shit-done/references/core-operating-rules.md` (verbosity, tooling, solo workflow).
 </role>
 
 <upstream_input>
@@ -464,10 +464,6 @@ PHASE_DIR=$(ls -d .planning/phases/${PADDED_PHASE}-* .planning/phases/${PHASE}-*
 # Read CONTEXT.md if exists (from /gsd-discuss-phase)
 cat "${PHASE_DIR}"/*-CONTEXT.md 2>/dev/null
 
-# Check if planning docs should be committed (default: true)
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-# Auto-detect gitignored (overrides config)
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
 ```
 
 **If CONTEXT.md exists**, it contains user decisions that MUST constrain your research:
@@ -542,21 +538,9 @@ Write to: `${PHASE_DIR}/${PADDED_PHASE}-RESEARCH.md`
 
 Where `PHASE_DIR` is the full path (e.g., `.planning/phases/01-foundation`)
 
-## Step 6: Commit Research
+## Step 6: Skip Commits
 
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations, log "Skipping planning docs commit (planning.commit_docs: false)"
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
-```bash
-git add "${PHASE_DIR}/${PADDED_PHASE}-RESEARCH.md"
-git commit -m "docs(${PHASE}): research phase domain
-
-Phase ${PHASE}: ${PHASE_NAME}
-- Standard stack identified
-- Architecture patterns documented
-- Pitfalls catalogued"
-```
+Do not commit `.planning/` artifacts.
 
 ## Step 7: Return Structured Result
 
@@ -640,7 +624,7 @@ Research is complete when:
 - [ ] Source hierarchy followed (Context7 → Official → WebFetch)
 - [ ] All findings have confidence levels
 - [ ] RESEARCH.md created in correct format
-- [ ] RESEARCH.md committed to git
+- [ ] RESEARCH.md saved locally
 - [ ] Structured return provided to orchestrator
 
 Research quality indicators:

@@ -22,7 +22,6 @@ Context budget: ~15% orchestrator, 100% fresh per subagent.
 </objective>
 
 <execution_context>
-@~/.config/opencode/get-shit-done/references/ui-brand.md
 @~/.config/opencode/get-shit-done/workflows/execute-phase.md
 </execution_context>
 
@@ -37,16 +36,6 @@ Phase: $ARGUMENTS
 </context>
 
 <process>
-0. **Resolve Models**
-
-   Read explicit per-agent models for spawning:
-   ```bash
-   executor_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-executor"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-codex-high")
-   verifier_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-verifier"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-high")
-   ```
-
-   Store resolved models for use in Task calls below.
-
 1. **Validate phase exists**
    - Find phase directory matching argument
    - Count PLAN.md files
@@ -74,7 +63,7 @@ Phase: $ARGUMENTS
    - Collect summaries from all plans
    - Report phase completion status
 
-6. **Commit any orchestrator corrections**
+6. **Commit any orchestrator corrections** (only if commits are requested)
    Check for uncommitted changes before verification:
    ```bash
    git status --porcelain
@@ -112,13 +101,8 @@ Phase: $ARGUMENTS
    - Write updated REQUIREMENTS.md
    - Skip if: REQUIREMENTS.md doesn't exist, or phase has no Requirements line
 
-10. **Commit phase completion**
-    Check `COMMIT_PLANNING_DOCS` from config.json (default: true).
-    If false: Skip git operations for .planning/ files.
-    If true: Bundle all phase metadata updates in one commit:
-    - Stage: `git add .planning/ROADMAP.md .planning/STATE.md`
-    - Stage REQUIREMENTS.md if updated: `git add .planning/REQUIREMENTS.md`
-    - Commit: `docs({phase}): complete {phase-name} phase`
+10. **Skip planning commits**
+    Do not commit `.planning/` artifacts.
 
 11. **Offer next steps**
     - Route to next action (see `<offer_next>`)
@@ -137,10 +121,6 @@ Output this markdown directly (not as a code block). Route based on status:
 ---
 
 **Route A: Phase verified, more phases remain**
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► PHASE {Z} COMPLETE ✓
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 **Phase {Z}: {Name}**
 
@@ -169,10 +149,6 @@ Goal verified ✓
 
 **Route B: Phase verified, milestone complete**
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► MILESTONE COMPLETE 🎉
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 **v1.0**
 
 {N} phases completed
@@ -200,9 +176,6 @@ All phase goals verified ✓
 
 **Route C: Gaps found — need additional planning**
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► PHASE {Z} GAPS FOUND ⚠
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 **Phase {Z}: {Name}**
 
@@ -246,20 +219,18 @@ After user runs /gsd-plan-phase {Z} --gaps:
 
 Before spawning, read file contents. The `@` syntax does not work across Task() boundaries.
 
-```bash
-# Read each plan and STATE.md
-PLAN_01_CONTENT=$(cat "{plan_01_path}")
-PLAN_02_CONTENT=$(cat "{plan_02_path}")
-PLAN_03_CONTENT=$(cat "{plan_03_path}")
-STATE_CONTENT=$(cat .planning/STATE.md)
-```
+Use the Read tool to load:
+- `plan_01_content` from `{plan_01_path}`
+- `plan_02_content` from `{plan_02_path}`
+- `plan_03_content` from `{plan_03_path}`
+- `state_content` from `.planning/STATE.md`
 
 Spawn all plans in a wave with a single message containing multiple Task calls, with inlined content:
 
 ```
-Task(prompt="Execute plan at {plan_01_path}\n\nPlan:\n{plan_01_content}\n\nProject state:\n{state_content}", subagent_type="gsd-executor", model="{executor_model}")
-Task(prompt="Execute plan at {plan_02_path}\n\nPlan:\n{plan_02_content}\n\nProject state:\n{state_content}", subagent_type="gsd-executor", model="{executor_model}")
-Task(prompt="Execute plan at {plan_03_path}\n\nPlan:\n{plan_03_content}\n\nProject state:\n{state_content}", subagent_type="gsd-executor", model="{executor_model}")
+Task(prompt="Execute plan at {plan_01_path}\n\nPlan:\n{plan_01_content}\n\nProject state:\n{state_content}", subagent_type="gsd-executor")
+Task(prompt="Execute plan at {plan_02_path}\n\nPlan:\n{plan_02_content}\n\nProject state:\n{state_content}", subagent_type="gsd-executor")
+Task(prompt="Execute plan at {plan_03_path}\n\nPlan:\n{plan_03_content}\n\nProject state:\n{state_content}", subagent_type="gsd-executor")
 ```
 
 All three run in parallel. Task tool blocks until all complete.
@@ -288,6 +259,8 @@ Only rule 4 requires user intervention.
 </deviation_rules>
 
 <commit_rules>
+Only perform these commit steps if the user explicitly requested commits in this session.
+
 **Per-Task Commits:**
 
 After each task completes:

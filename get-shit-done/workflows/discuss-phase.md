@@ -1,7 +1,7 @@
 <purpose>
 Extract implementation decisions that downstream agents need. Analyze the phase to identify gray areas, let the user choose what to discuss, then deep-dive each selected area until satisfied.
 
-You are a thinking partner, not an interviewer. The user is the visionary — you are the builder. Your job is to capture decisions that will guide research and planning, not to figure out implementation yourself.
+You are a thinking partner. Treat the user as a capable collaborator and capture decisions that will guide research and planning.
 </purpose>
 
 <downstream_awareness>
@@ -21,7 +21,7 @@ You are a thinking partner, not an interviewer. The user is the visionary — yo
 </downstream_awareness>
 
 <philosophy>
-**User = founder/visionary. Assistant = builder.**
+**User = collaborator. Assistant = builder.**
 
 The user knows:
 - How they imagine it working
@@ -29,11 +29,7 @@ The user knows:
 - What's essential vs nice-to-have
 - Specific behaviors or references they have in mind
 
-The user doesn't know (and shouldn't be asked):
-- Codebase patterns (researcher reads the code)
-- Technical risks (researcher identifies these)
-- Implementation approach (planner figures this out)
-- Success metrics (inferred from the work)
+Avoid leading with deep technical implementation questions. If the user volunteers technical preferences or constraints, capture them.
 
 Ask about vision and implementation choices. Capture decisions for downstream agents.
 </philosophy>
@@ -98,11 +94,8 @@ Phase: "API documentation"
 
 **The key question:** What decisions would change the outcome that the user should weigh in on?
 
-**Assistant handles these (don't ask):**
-- Technical implementation details
-- Architecture patterns
-- Performance optimization
-- Scope (roadmap defines this)
+**Default to user-facing decisions.** Avoid leading with deep technical implementation, architecture, or performance questions.
+If the user raises technical constraints or preferences, capture them.
 </gray_area_identification>
 
 <process>
@@ -126,6 +119,15 @@ Exit workflow.
 **If phase found:** Continue to analyze_phase.
 </step>
 
+<step name="load_mode">
+Read workflow mode:
+
+```bash
+WORKFLOW_MODE=$(cat .planning/config.json 2>/dev/null | grep -o '"mode"[[:space:]]*:[[:space:]]*"[^"]*"' | cut -d'"' -f4)
+WORKFLOW_MODE=${WORKFLOW_MODE:-interactive}
+```
+</step>
+
 <step name="check_existing">
 Check if CONTEXT.md already exists:
 
@@ -136,17 +138,12 @@ ls .planning/phases/${PADDED_PHASE}-*/*-CONTEXT.md .planning/phases/${PHASE}-*/*
 ```
 
 **If exists:**
-Use question:
-- header: "Existing context"
-- question: "Phase [X] already has context. What do you want to do?"
-- options:
-  - "Update it" — Review and revise existing context
-  - "View it" — Show me what's there
-  - "Skip" — Use existing context as-is
+Ask in natural language:
+"Phase [X] already has context. Do you want to update it, view it, or skip?"
 
-If "Update": Load existing, continue to analyze_phase
-If "View": Display CONTEXT.md, then offer update/skip
-If "Skip": Exit workflow
+If "View": Display CONTEXT.md, then ask again.
+If "Update": Load existing, continue to analyze_phase.
+If "Skip": Exit workflow.
 
 **If doesn't exist:** Continue to analyze_phase.
 </step>
@@ -188,14 +185,10 @@ We'll clarify HOW to implement this.
 (New capabilities belong in other phases.)
 ```
 
-**Then use question (multiple: true):**
-- header: "Discuss"
-- question: "Which areas do you want to discuss for [phase name]?"
-- options: Generate 3-4 phase-specific gray areas, each formatted as:
-  - "[Specific area]" (label) — concrete, not generic
-  - [1-2 questions this covers] (description)
+Then present the gray areas as a short list and ask in natural language:
+"Which of these do you want to discuss? You can list numbers/names, add new areas, or tell me where to start."
 
-**Do NOT include a "skip" or "you decide" option.** User ran this command to discuss — give them real choices.
+If the user is unsure or asks for choices, use the question tool with 3-4 concrete options.
 
 **Examples by domain:**
 
@@ -248,21 +241,18 @@ Ask 4 questions per area before offering to continue or move on. Each answer oft
 
 3. **After 4 questions, check:**
    - header: "[Area]"
-   - question: "More questions about [area], or move to next?"
-   - options: "More questions" / "Next area"
+   Ask in natural language: "Want to go deeper on [area], or move to the next one?"
 
-   If "More questions" → ask 4 more, then check again
-   If "Next area" → proceed to next selected area
+   If they want more → ask deeper follow-ups, then check again
+   If they want next → proceed to next selected area
 
 4. **After all areas complete:**
-   - header: "Done"
-   - question: "That covers [list areas]. Ready to create context?"
-   - options: "Create context" / "Revisit an area"
+   Ask in natural language: "That covers [list areas]. Ready to create context, or want to revisit anything?"
 
-**Question design:**
+**Question design (when a discrete decision is required):**
 - Options should be concrete, not abstract ("Cards" not "Option A")
 - Each answer should inform the next question
-- If user picks "Other", receive their input, reflect it back, confirm
+- If user offers something else, reflect it back and confirm
 
 **Scope creep handling:**
 If user mentions something outside the phase domain:
@@ -352,6 +342,21 @@ fi
 Write file.
 </step>
 
+<step name="review_context">
+If `WORKFLOW_MODE=interactive`:
+
+- Present where to review:
+  - `${PHASE_DIR}/${PADDED_PHASE}-CONTEXT.md`
+- Ask for freeform feedback:
+  "Review the context file and reply with edits or questions. Say `approve` when ready."
+
+If user provides feedback:
+- Update CONTEXT.md in place
+- Repeat review until approved
+
+If `WORKFLOW_MODE=yolo`: Skip review.
+</step>
+
 <step name="confirm_creation">
 Present summary and next steps:
 
@@ -384,39 +389,16 @@ Created: .planning/phases/${PADDED_PHASE}-${SLUG}/${PADDED_PHASE}-CONTEXT.md
 
 **Also available:**
 - `/gsd-plan-phase ${PHASE} --skip-research` — plan without research
-- Review/edit CONTEXT.md before continuing
+- You can edit CONTEXT.md later if needed
 
 ---
 ```
 </step>
 
-<step name="git_commit">
-Commit phase context:
+<step name="record_local">
+Do not commit `.planning/` artifacts.
 
-**Check planning config:**
-
-```bash
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
-```bash
-git add "${PHASE_DIR}/${PADDED_PHASE}-CONTEXT.md"
-git commit -m "$(cat <<'EOF'
-docs(${PADDED_PHASE}): capture phase context
-
-Phase ${PADDED_PHASE}: ${PHASE_NAME}
-- Implementation decisions documented
-- Phase boundary established
-EOF
-)"
-```
-
-Confirm: "Committed: docs(${PADDED_PHASE}): capture phase context"
+Confirm: "Saved locally: capture phase context (Phase ${PADDED_PHASE})"
 </step>
 
 </process>
@@ -429,5 +411,6 @@ Confirm: "Committed: docs(${PADDED_PHASE}): capture phase context"
 - Scope creep redirected to deferred ideas
 - CONTEXT.md captures actual decisions, not vague vision
 - Deferred ideas preserved for future phases
+- Context review completed (interactive mode) or skipped (yolo mode)
 - User knows next steps
 </success_criteria>

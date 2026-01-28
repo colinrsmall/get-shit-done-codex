@@ -1,5 +1,6 @@
 ---
 description: Researches domain ecosystem before roadmap creation. Produces files in .planning/research/ consumed during roadmap creation. Spawned by /gsd-new-project or /gsd-new-milestone orchestrators.
+model: openai/gpt-5.2-high
 color: "#00FFFF"
 tools:
   read: true
@@ -31,8 +32,7 @@ Your job: Answer "What does this domain ecosystem look like?" Produce research f
 - Return structured result to orchestrator
 
 **Output contract:** Write the research files, then return exactly one block from <structured_returns>.
-**Verbosity:** No narration. No extra sections.
-**Tooling:** Prefer Context7 for library APIs, WebFetch for official docs and discovery. Cross-verify and batch independent queries.
+**Operating rules:** See `get-shit-done/references/core-operating-rules.md` (verbosity, tooling, solo workflow).
 </role>
 
 <downstream_consumer>
@@ -767,7 +767,7 @@ Create files in `.planning/research/`:
 
 ## Step 6: Return Structured Result
 
-**DO NOT commit.** You are always spawned in parallel with other researchers. The orchestrator or synthesizer agent commits all research files together after all researchers complete.
+**DO NOT commit.** You are always spawned in parallel with other researchers. The orchestrator or synthesizer agent collects results after all researchers complete.
 
 Return to orchestrator with structured result.
 
@@ -861,7 +861,7 @@ Research is complete when:
 - [ ] All findings have confidence levels
 - [ ] Output files created in `.planning/research/`
 - [ ] SUMMARY.md includes roadmap implications
-- [ ] Files written (DO NOT commit — orchestrator handles this)
+- [ ] Files written (no commits)
 - [ ] Structured return provided to orchestrator
 
 Research quality indicators:

@@ -16,6 +16,7 @@ This is the most leveraged moment in any project. Deep questioning here means be
 
 **Creates:**
 - `.planning/PROJECT.md` — project context
+- `.planning/PROJECT-REVIEW.md` — project decisions and review notes
 - `.planning/config.json` — workflow preferences
 - `.planning/research/` — domain research (optional)
 - `.planning/REQUIREMENTS.md` — scoped requirements
@@ -29,49 +30,41 @@ This is the most leveraged moment in any project. Deep questioning here means be
 <execution_context>
 
 @~/.config/opencode/get-shit-done/references/questioning.md
-@~/.config/opencode/get-shit-done/references/ui-brand.md
 @~/.config/opencode/get-shit-done/templates/project.md
+@~/.config/opencode/get-shit-done/templates/project-review.md
 @~/.config/opencode/get-shit-done/templates/requirements.md
 
 </execution_context>
 
 <process>
 
+
 ## Phase 1: Setup
 
 **MANDATORY FIRST STEP — Execute these checks before ANY user interaction:**
 
 1. **Abort if project exists:**
-   ```bash
-   [ -f .planning/PROJECT.md ] && echo "ERROR: Project already initialized. Use /gsd-progress" && exit 1
-   ```
+   - Use `glob` to check for `.planning/PROJECT.md`
+   - If present: stop with `ERROR: Project already initialized. Use /gsd-progress`
 
 2. **Initialize git repo in THIS directory** (required even if inside a parent repo):
-   ```bash
-   if [ -d .git ] || [ -f .git ]; then
-       echo "Git repo exists in current directory"
-   else
-       git init
-       echo "Initialized new git repo"
-   fi
-   ```
+   - Use `glob`/`list` to check for `.git` (dir or file)
+   - If missing, run `git init` via Bash
 
 3. **Detect existing code (brownfield detection):**
-   ```bash
-   CODE_FILES=$(find . -name "*.ts" -o -name "*.js" -o -name "*.py" -o -name "*.go" -o -name "*.rs" -o -name "*.swift" -o -name "*.java" 2>/dev/null | grep -v node_modules | grep -v .git | head -20)
-   HAS_PACKAGE=$([ -f package.json ] || [ -f requirements.txt ] || [ -f Cargo.toml ] || [ -f go.mod ] || [ -f Package.swift ] && echo "yes")
-   HAS_CODEBASE_MAP=$([ -d .planning/codebase ] && echo "yes")
-   ```
+   - Use `glob` to find code files: `**/*.{ts,js,py,go,rs,swift,java}` (exclude `node_modules`)
+   - Use `glob` to check for package files: `package.json`, `requirements.txt`, `Cargo.toml`, `go.mod`, `Package.swift`
+   - Use `glob` to check for `.planning/codebase/`
 
-   **You MUST run all bash commands above using the Bash tool before proceeding.**
+Use OpenCode tools for file detection. Use Bash only for git operations.
 
 ## Phase 2: Brownfield Offer
 
 **If existing code detected and .planning/codebase/ doesn't exist:**
 
 Check the results from setup step:
-- If `CODE_FILES` is non-empty OR `HAS_PACKAGE` is "yes"
-- AND `HAS_CODEBASE_MAP` is NOT "yes"
+- If any code files are found OR any package files exist
+- AND `.planning/codebase/` does not exist
 
 Use question:
 - header: "Existing Code"
@@ -92,14 +85,6 @@ Exit command.
 
 ## Phase 3: Deep Questioning
 
-**Display stage banner:**
-
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► QUESTIONING
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
-
 **Open the conversation:**
 
 Ask inline (freeform, NOT question):
@@ -110,7 +95,7 @@ Wait for their response. This gives you the context needed to ask intelligent fo
 
 **Follow the thread:**
 
-Based on what they said, ask follow-up questions that dig into their response. Use question with options that probe what they mentioned — interpretations, clarifications, concrete examples.
+Based on what they said, ask follow-up questions that dig into their response. Default to natural language; use question tool only when a discrete decision is needed.
 
 Keep following threads. Each answer opens new threads to explore. Ask about:
 - What excited them
@@ -132,17 +117,11 @@ As you go, mentally check the context checklist from `questioning.md`. If gaps r
 
 **Decision gate:**
 
-When you could write a clear PROJECT.md, use question:
+When you could write a clear PROJECT.md, ask in natural language:
 
-- header: "Ready?"
-- question: "I think I understand what you're after. Ready to create PROJECT.md?"
-- options:
-  - "Create PROJECT.md" — Let's move forward
-  - "Keep exploring" — I want to share more / ask me more
+"I think I understand what you're after. Want me to draft PROJECT.md now, or keep exploring?"
 
-If "Keep exploring" — ask what they want to add, or identify gaps and probe naturally.
-
-Loop until "Create PROJECT.md" selected.
+If they want to keep exploring, ask what they want to add or identify gaps and probe naturally.
 
 ## Phase 4: Write PROJECT.md
 
@@ -221,18 +200,9 @@ Initialize with any decisions made during questioning:
 
 Do not compress. Capture everything gathered.
 
-**Commit PROJECT.md:**
+Ensure `.planning/` exists (create if needed).
 
-```bash
-mkdir -p .planning
-git add .planning/PROJECT.md
-git commit -m "$(cat <<'EOF'
-docs: initialize project
-
-[One-liner from PROJECT.md What This Is section]
-EOF
-)"
-```
+Do not commit `.planning/` artifacts.
 
 ## Phase 5: Workflow Preferences
 
@@ -266,15 +236,6 @@ questions: [
     options: [
       { label: "Parallel (Recommended)", description: "Independent plans run simultaneously" },
       { label: "Sequential", description: "One plan at a time" }
-    ]
-  },
-  {
-    header: "Git Tracking",
-    question: "Commit planning docs to git?",
-    multiSelect: false,
-    options: [
-      { label: "Yes (Recommended)", description: "Planning docs tracked in version control" },
-      { label: "No", description: "Keep .planning/ local-only (add to .gitignore)" }
     ]
   }
 ]
@@ -336,23 +297,6 @@ Create `.planning/config.json` with all settings:
     "plan_check": true|false,
     "verifier": true|false
   },
-  "planning": {
-    "commit_docs": true|false,
-    "search_gitignored": false
-  },
-  "models": {
-    "gsd-planner": "openai/gpt-5.2-high",
-    "gsd-roadmapper": "openai/gpt-5.2-high",
-    "gsd-phase-researcher": "openai/gpt-5.2-high",
-    "gsd-project-researcher": "openai/gpt-5.2-high",
-    "gsd-research-synthesizer": "openai/gpt-5.2-high",
-    "gsd-plan-checker": "openai/gpt-5.2-high",
-    "gsd-verifier": "openai/gpt-5.2-high",
-    "gsd-integration-checker": "openai/gpt-5.2-high",
-    "gsd-codebase-mapper": "openai/gpt-5.2-high",
-    "gsd-executor": "openai/gpt-5.2-codex-high",
-    "gsd-debugger": "openai/gpt-5.2-codex-high"
-  },
   "parallelization": {
     "enabled": true|false,
     "plan_level": true,
@@ -378,41 +322,9 @@ Create `.planning/config.json` with all settings:
 }
 ```
 
-**If planning.commit_docs = No:**
-- Set `planning.commit_docs: false` in config.json
-- Add `.planning/` to `.gitignore` (create if needed)
+Do not commit `.planning/` artifacts.
 
-**If planning.commit_docs = Yes:**
-- No additional gitignore entries needed
-
-**Commit config.json:**
-
-```bash
-git add .planning/config.json
-git commit -m "$(cat <<'EOF'
-chore: add project config
-
-Mode: [chosen mode]
-Depth: [chosen depth]
-Parallelization: [enabled/disabled]
-Workflow agents: research=[on/off], plan_check=[on/off], verifier=[on/off]
-EOF
-)"
-```
-
-**Note:** Run `/gsd-settings` anytime to update these preferences.
-
-## Phase 5.5: Resolve Models
-
-Read explicit per-agent models for spawning:
-
-```bash
-researcher_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-project-researcher"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-high")
-synthesizer_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-research-synthesizer"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-high")
-roadmapper_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-roadmapper"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-high")
-```
-
-Store resolved models for use in Task calls below.
+**Note:** Run `/gsd-settings` anytime to update these preferences. Models are set in agent headers (see `agents/*.md`).
 
 ## Phase 6: Research Decision
 
@@ -424,15 +336,6 @@ Use question:
   - "Skip research" — I know this domain well, go straight to requirements
 
 **If "Research first":**
-
-Display stage banner:
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► RESEARCHING
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Researching [domain] ecosystem...
-```
 
 Create research directory:
 ```bash
@@ -494,7 +397,7 @@ Your STACK.md feeds into roadmap creation. Be prescriptive:
 Write to: .planning/research/STACK.md
 Use template: ~/.config/opencode/get-shit-done/templates/research-project/STACK.md
 </output>
-", subagent_type="gsd-project-researcher", model="{researcher_model}", description="Stack research")
+", subagent_type="gsd-project-researcher", description="Stack research")
 
 Task(prompt="
 <research_type>
@@ -533,7 +436,7 @@ Your FEATURES.md feeds into requirements definition. Categorize clearly:
 Write to: .planning/research/FEATURES.md
 Use template: ~/.config/opencode/get-shit-done/templates/research-project/FEATURES.md
 </output>
-", subagent_type="gsd-project-researcher", model="{researcher_model}", description="Features research")
+", subagent_type="gsd-project-researcher", description="Features research")
 
 Task(prompt="
 <research_type>
@@ -572,7 +475,7 @@ Your ARCHITECTURE.md informs phase structure in roadmap. Include:
 Write to: .planning/research/ARCHITECTURE.md
 Use template: ~/.config/opencode/get-shit-done/templates/research-project/ARCHITECTURE.md
 </output>
-", subagent_type="gsd-project-researcher", model="{researcher_model}", description="Architecture research")
+", subagent_type="gsd-project-researcher", description="Architecture research")
 
 Task(prompt="
 <research_type>
@@ -611,7 +514,7 @@ Your PITFALLS.md prevents mistakes in roadmap/planning. For each pitfall:
 Write to: .planning/research/PITFALLS.md
 Use template: ~/.config/opencode/get-shit-done/templates/research-project/PITFALLS.md
 </output>
-", subagent_type="gsd-project-researcher", model="{researcher_model}", description="Pitfalls research")
+", subagent_type="gsd-project-researcher", description="Pitfalls research")
 ```
 
 After all 4 agents complete, spawn synthesizer to create SUMMARY.md:
@@ -635,15 +538,11 @@ Write to: .planning/research/SUMMARY.md
 Use template: ~/.config/opencode/get-shit-done/templates/research-project/SUMMARY.md
 Commit after writing.
 </output>
-", subagent_type="gsd-research-synthesizer", model="{synthesizer_model}", description="Synthesize research")
+", subagent_type="gsd-research-synthesizer", description="Synthesize research")
 ```
 
-Display research complete banner and key findings:
+Display key findings:
 ```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► RESEARCH COMPLETE ✓
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 ## Key Findings
 
 **Stack:** [from SUMMARY.md]
@@ -656,13 +555,6 @@ Files: `.planning/research/`
 **If "Skip research":** Continue to Phase 7.
 
 ## Phase 7: Define Requirements
-
-Display stage banner:
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► DEFINING REQUIREMENTS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
 
 **Load context:**
 
@@ -780,34 +672,15 @@ Show every requirement (not counts) for user confirmation:
 
 ---
 
-Does this capture what you're building? (yes / adjust)
+Ask for feedback in natural language:
+"Review these requirements. Reply with edits, additions, or removals. Say `approve` when it looks right."
 ```
 
-If "adjust": Return to scoping.
+If they request adjustments: revise REQUIREMENTS.md and re-present until approved.
 
-**Commit requirements:**
-
-```bash
-git add .planning/REQUIREMENTS.md
-git commit -m "$(cat <<'EOF'
-docs: define v1 requirements
-
-[X] requirements across [N] categories
-[Y] requirements deferred to v2
-EOF
-)"
-```
+Do not commit `.planning/` artifacts.
 
 ## Phase 8: Create Roadmap
-
-Display stage banner:
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► CREATING ROADMAP
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-◆ Spawning roadmapper...
-```
 
 Spawn gsd-roadmapper agent with context:
 
@@ -840,7 +713,7 @@ Create roadmap:
 
 Write files first, then return. This ensures artifacts persist even if context is lost.
 </instructions>
-", subagent_type="gsd-roadmapper", model="{roadmapper_model}", description="Create roadmap")
+", subagent_type="gsd-roadmapper", description="Create roadmap")
 ```
 
 **Handle roadmapper return:**
@@ -890,20 +763,15 @@ Success criteria:
 ---
 ```
 
-**CRITICAL: Ask for approval before committing:**
+**CRITICAL: Ask for approval before continuing:**
 
-Use question:
-- header: "Roadmap"
-- question: "Does this roadmap structure work for you?"
-- options:
-  - "Approve" — Commit and continue
-  - "Adjust phases" — Tell me what to change
-  - "Review full file" — Show raw ROADMAP.md
+Ask for feedback in natural language:
+"Review the proposed roadmap. Reply with changes or questions. Say `approve` when it looks right."
 
-**If "Approve":** Continue to commit.
+**If user wants full file:** display `cat .planning/ROADMAP.md`, then re-ask for feedback.
 
-**If "Adjust phases":**
-- Get user's adjustment notes
+**If user requests changes:**
+- Get adjustment notes
 - Re-spawn roadmapper with revision context:
   ```
   Task(prompt="
@@ -916,44 +784,66 @@ Use question:
   Update the roadmap based on feedback. Edit files in place.
   Return ROADMAP REVISED with changes made.
   </revision>
-  ", subagent_type="gsd-roadmapper", model="{roadmapper_model}", description="Revise roadmap")
+  ", subagent_type="gsd-roadmapper", description="Revise roadmap")
   ```
 - Present revised roadmap
 - Loop until user approves
 
-**If "Review full file":** Display raw `cat .planning/ROADMAP.md`, then re-ask.
+Do not commit `.planning/` artifacts.
 
-**Commit roadmap (after approval):**
+## Phase 9: Project Review (Interactive Mode)
+
+Read workflow mode:
 
 ```bash
-git add .planning/ROADMAP.md .planning/STATE.md .planning/REQUIREMENTS.md
-git commit -m "$(cat <<'EOF'
-docs: create roadmap ([N] phases)
-
-Phases:
-1. [phase-name]: [requirements covered]
-2. [phase-name]: [requirements covered]
-...
-
-All v1 requirements mapped to phases.
-EOF
-)"
+WORKFLOW_MODE=$(cat .planning/config.json 2>/dev/null | grep -o '"mode"[[:space:]]*:[[:space:]]*"[^"]*"' | cut -d'"' -f4)
+WORKFLOW_MODE=${WORKFLOW_MODE:-interactive}
 ```
+
+Ensure review file exists:
+
+- Path: `.planning/PROJECT-REVIEW.md`
+- If missing: create from `~/.config/opencode/get-shit-done/templates/project-review.md` and fill project name and date
+- Populate decisions, assumptions, and questions based on PROJECT.md, REQUIREMENTS.md, ROADMAP.md
+- Preserve user-authored sections if file exists:
+  - `## Reviewer Notes (User)`
+  - `## Approval`
+
+If `WORKFLOW_MODE=interactive`:
+
+- Present where to review:
+  - `.planning/PROJECT.md`
+  - `.planning/REQUIREMENTS.md`
+  - `.planning/ROADMAP.md`
+  - `.planning/PROJECT-REVIEW.md`
+- Ask for freeform feedback:
+  "Review the project artifacts and review file. Reply with questions, comments, or edits you want. Say `approve` when ready."
+
+**If user replies `approve`:** Proceed to Phase 10.
+
+**If user provides feedback:**
+
+- Apply edits to the appropriate files:
+  - Project scope or constraints → update PROJECT.md
+  - Requirements changes → update REQUIREMENTS.md
+  - Roadmap changes → re-run roadmapper revision to keep mapping consistent
+- Update PROJECT-REVIEW.md with new decisions/assumptions/questions
+- Loop this review until approved
+
+If `WORKFLOW_MODE=yolo`: Skip review and proceed to Phase 10.
 
 ## Phase 10: Done
 
 Present completion with next steps:
 
 ```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► PROJECT INITIALIZED ✓
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 **[Project Name]**
 
 | Artifact       | Location                    |
 |----------------|-----------------------------|
 | Project        | `.planning/PROJECT.md`      |
+| Project Review | `.planning/PROJECT-REVIEW.md` |
 | Config         | `.planning/config.json`     |
 | Research       | `.planning/research/`       |
 | Requirements   | `.planning/REQUIREMENTS.md` |
@@ -984,6 +874,7 @@ Present completion with next steps:
 <output>
 
 - `.planning/PROJECT.md`
+- `.planning/PROJECT-REVIEW.md`
 - `.planning/config.json`
 - `.planning/research/` (if research selected)
   - `STACK.md`
@@ -1003,20 +894,22 @@ Present completion with next steps:
 - [ ] Git repo initialized
 - [ ] Brownfield detection completed
 - [ ] Deep questioning completed (threads followed, not rushed)
-- [ ] PROJECT.md captures full context → **committed**
-- [ ] config.json has workflow mode, depth, parallelization → **committed**
-- [ ] Research completed (if selected) — 4 parallel agents spawned → **committed**
+- [ ] PROJECT.md captures full context
+- [ ] PROJECT-REVIEW.md created and updated
+- [ ] config.json has workflow mode, depth, parallelization
+- [ ] Research completed (if selected) — 4 parallel agents spawned
 - [ ] Requirements gathered (from research or conversation)
 - [ ] User scoped each category (v1/v2/out of scope)
-- [ ] REQUIREMENTS.md created with REQ-IDs → **committed**
+- [ ] REQUIREMENTS.md created with REQ-IDs
 - [ ] gsd-roadmapper spawned with context
 - [ ] Roadmap files written immediately (not draft)
 - [ ] User feedback incorporated (if any)
+- [ ] Project review completed (interactive mode) or skipped (yolo mode)
 - [ ] ROADMAP.md created with phases, requirement mappings, success criteria
 - [ ] STATE.md initialized
 - [ ] REQUIREMENTS.md traceability updated
 - [ ] User knows next step is `/gsd-discuss-phase 1`
 
-**Atomic commits:** Each phase commits its artifacts immediately. If context is lost, artifacts persist.
+Do not commit `.planning/` artifacts.
 
 </success_criteria>

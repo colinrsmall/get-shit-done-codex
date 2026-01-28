@@ -5,6 +5,7 @@ Project initialization is dream extraction, not requirements gathering. You're h
 <philosophy>
 
 **You are a thinking partner, not an interviewer.**
+Assume the user can evaluate tradeoffs and wants to collaborate.
 
 The user often has a fuzzy idea. Your job is to help them sharpen it. Ask questions that make them think "oh, I hadn't considered that" or "yes, that's exactly what I mean."
 
@@ -68,9 +69,10 @@ Use these as inspiration, not a checklist. Pick what's relevant to the thread.
 
 <using_question>
 
-Use the question tool to help users think by presenting concrete options to react to.
+Use the question tool sparingly. Default to open-ended, natural language dialogue.
+Only use the question tool when you need a discrete decision to proceed.
 
-**Good options:**
+**Good options (when a decision is required):**
 - Interpretations of what they might mean
 - Specific examples to confirm or deny
 - Concrete choices that reveal priorities
@@ -80,19 +82,15 @@ Use the question tool to help users think by presenting concrete options to reac
 - Leading options that presume an answer
 - Too many options (2-4 is ideal)
 
-**Example — vague answer:**
+**Example — vague answer (open-ended first):**
 User says "it should be fast"
 
-- header: "Fast"
-- question: "Fast how?"
-- options: ["Sub-second response", "Handles large datasets", "Quick to build", "Let me explain"]
+Ask: "Fast how? Give me a concrete example." If they struggle, then use question tool with options.
 
 **Example — following a thread:**
 User mentions "frustrated with current tools"
 
-- header: "Frustration"
-- question: "What specifically frustrates you?"
-- options: ["Too many clicks", "Missing features", "Unreliable", "Let me explain"]
+Ask: "What specifically frustrates you?" If unclear, provide options via question tool.
 
 </using_question>
 
@@ -111,17 +109,11 @@ Four things. If they volunteer more, capture it.
 
 <decision_gate>
 
-When you could write a clear PROJECT.md, offer to proceed:
+When you could write a clear PROJECT.md, offer to proceed in natural language:
 
-- header: "Ready?"
-- question: "I think I understand what you're after. Ready to create PROJECT.md?"
-- options:
-  - "Create PROJECT.md" — Let's move forward
-  - "Keep exploring" — I want to share more / ask me more
+"I think I understand what you're after. Want me to draft PROJECT.md now, or keep exploring?"
 
-If "Keep exploring" — ask what they want to add or identify gaps and probe naturally.
-
-Loop until "Create PROJECT.md" selected.
+If they want to keep exploring, ask what they want to add or identify gaps and probe naturally.
 
 </decision_gate>
 
@@ -134,7 +126,7 @@ Loop until "Create PROJECT.md" selected.
 - **Rushing** — Minimizing questions to get to "the work"
 - **Shallow acceptance** — Taking vague answers without probing
 - **Premature constraints** — Asking about tech stack before understanding the idea
-- **User skills** — NEVER ask about user's technical experience. Assistant builds.
+- **User skills** — NEVER ask about user's technical experience. Assume competence and collaborate.
 
 </anti_patterns>
 

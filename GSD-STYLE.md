@@ -290,59 +290,15 @@ Use subagents for autonomous work. Reserve main context for user interaction.
 
 ## Commit Conventions
 
-### Format
-
-```
-{type}({phase}-{plan}): {description}
-```
-
-### Types
-
-| Type | Use |
-|------|-----|
-| `feat` | New feature |
-| `fix` | Bug fix |
-| `test` | Tests only (TDD RED) |
-| `refactor` | Code cleanup (TDD REFACTOR) |
-| `docs` | Documentation/metadata |
-| `chore` | Config/dependencies |
-
-### Rules
-
-- One commit per task during execution
-- Stage files individually (never `git add .`)
-- Capture hash for SUMMARY.md
-- Include Co-Authored-By line
+See `get-shit-done/references/git-integration.md` for commit points, formats, and types.
 
 ---
 
 ## UX Patterns
 
-**Visual patterns:** `get-shit-done/references/ui-brand.md`
-
-Orchestrators @-reference ui-brand.md for stage banners, checkpoint boxes, status symbols, and completion displays.
-
 ### "Next Up" Format
 
-```markdown
-───────────────────────────────────────────────────────────────
-
-## ▶ Next Up
-
-**{identifier}: {name}** — {one-line description}
-
-`{copy-paste command}`
-
-<sub>`/clear` first → fresh context window</sub>
-
-───────────────────────────────────────────────────────────────
-
-**Also available:**
-- Alternative option
-- Another option
-
-───────────────────────────────────────────────────────────────
-```
+See `get-shit-done/references/continuation-format.md` for the canonical format and variants.
 
 ### Decision Gates
 
@@ -421,7 +377,7 @@ Quick tasks update STATE.md, NOT ROADMAP.md:
 ```markdown
 ### Quick Tasks Completed
 
-| # | Description | Date | Commit | Directory |
+| # | Description | Date | Commits | Directory |
 |---|-------------|------|--------|-----------|
 | 001 | Add dark mode toggle | 2026-01-19 | abc123f | [001-add-dark-mode](./quick/001-add-dark-mode/) |
 ```
@@ -451,40 +407,7 @@ Co-Authored-By: Assistant <noreply@example.com>
 
 ## TDD Plans
 
-### Detection Heuristic
-
-> Can you write `expect(fn(input)).toBe(output)` before writing `fn`?
-
-Yes → TDD plan (one feature per plan)
-No → Standard plan
-
-### TDD Plan Structure
-
-```yaml
----
-type: tdd
----
-```
-
-```xml
-<objective>
-Implement [feature] using TDD (RED → GREEN → REFACTOR)
-</objective>
-
-<behavior>
-Expected behavior specification
-</behavior>
-
-<implementation>
-How to make tests pass
-</implementation>
-```
-
-### TDD Commits
-
-- RED: `test({phase}-{plan}): add failing test for [feature]`
-- GREEN: `feat({phase}-{plan}): implement [feature]`
-- REFACTOR: `refactor({phase}-{plan}): clean up [feature]`
+See `get-shit-done/references/tdd.md` for heuristics, plan structure, and commit patterns.
 
 ---
 
@@ -499,7 +422,7 @@ How to make tests pass
 7. **Context size as quality constraint** — split aggressively
 8. **Temporal language banned** — current state only
 9. **Plans ARE prompts** — executable, not documents
-10. **Atomic commits** — Git history as context source
+10. **Atomic code commits (when requested)** — Git history as context source
 11. **question tool for exploration** — always options
 12. **Checkpoints post-automation** — automate first, verify after
 13. **Deviation rules are automatic** — no permission for bugs/critical

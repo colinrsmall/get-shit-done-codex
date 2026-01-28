@@ -84,9 +84,9 @@ Template for `.planning/codebase/INTEGRATIONS.md` - captures external service de
 ## CI/CD & Deployment
 
 **Hosting:**
-- [Platform] - [e.g., "Vercel", "AWS Lambda", "Docker on ECS"]
+- [Platform] - [e.g., "AWS Lambda", "Docker on ECS"]
   - Deployment: [e.g., "automatic on main branch push"]
-  - Environment vars: [e.g., "configured in Vercel dashboard"]
+  - Environment vars: [e.g., "configured in hosting dashboard"]
 
 **CI Pipeline:**
 - [Service] - [e.g., "GitHub Actions"]
@@ -105,7 +105,7 @@ Template for `.planning/codebase/INTEGRATIONS.md` - captures external service de
 - Data: [e.g., "separate staging database"]
 
 **Production:**
-- Secrets management: [e.g., "Vercel environment variables"]
+- Secrets management: [e.g., "provider environment variables"]
 - Failover/redundancy: [e.g., "multi-region DB replication"]
 
 ## Webhooks & Callbacks
@@ -193,15 +193,15 @@ Template for `.planning/codebase/INTEGRATIONS.md` - captures external service de
 - None (planned: Mixpanel)
 
 **Logs:**
-- Vercel logs - stdout/stderr only
-  - Retention: 7 days on Pro plan
+- Platform logs - stdout/stderr only
+  - Retention: [e.g., 7 days]
 
 ## CI/CD & Deployment
 
 **Hosting:**
-- Vercel - Next.js app hosting
+- Managed hosting - Next.js app hosting
   - Deployment: Automatic on main branch push
-  - Environment vars: Configured in Vercel dashboard (synced to .env.example)
+  - Environment vars: Configured in hosting dashboard (synced to .env.example)
 
 **CI Pipeline:**
 - GitHub Actions - Tests and type checking
@@ -218,10 +218,10 @@ Template for `.planning/codebase/INTEGRATIONS.md` - captures external service de
 **Staging:**
 - Uses separate Supabase staging project
 - Stripe test mode
-- Same Vercel account, different environment
+- Same hosting account, different environment
 
 **Production:**
-- Secrets management: Vercel environment variables
+- Secrets management: hosting environment variables
 - Database: Supabase production project with daily backups
 
 ## Webhooks & Callbacks
@@ -276,5 +276,5 @@ Template for `.planning/codebase/INTEGRATIONS.md` - captures external service de
 - Planning for service outages or migrations
 
 **Security note:**
-Document WHERE secrets live (env vars, Vercel dashboard, 1Password), never WHAT the secrets are.
+Document WHERE secrets live (env vars, provider dashboard, 1Password), never WHAT the secrets are.
 </guidelines>

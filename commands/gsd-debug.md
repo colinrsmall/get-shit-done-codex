@@ -27,16 +27,6 @@ ls .planning/debug/*.md 2>/dev/null | grep -v resolved | head -5
 
 <process>
 
-## 0. Resolve Models
-
-Read explicit model for agent spawning:
-
-```bash
-debugger_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-debugger"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-codex-high")
-```
-
-Store resolved model for use in Task calls below.
-
 ## 1. Check Active Sessions
 
 If active sessions exist AND no $ARGUMENTS:
@@ -91,7 +81,6 @@ Create: .planning/debug/{slug}.md
 Task(
   prompt=filled_prompt,
   subagent_type="gsd-debugger",
-  model="{debugger_model}",
   description="Debug {slug}"
 )
 ```
@@ -144,7 +133,6 @@ goal: find_and_fix
 Task(
   prompt=continuation_prompt,
   subagent_type="gsd-debugger",
-  model="{debugger_model}",
   description="Continue debug {slug}"
 )
 ```

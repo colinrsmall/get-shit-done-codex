@@ -9,24 +9,14 @@ Read config.json for planning behavior settings.
 @~/.config/opencode/get-shit-done/references/git-integration.md
 </required_reading>
 
+**Commit guard:** Only run `git commit` steps if the user explicitly requested commits in this session.
+
 <process>
-
-<step name="resolve_models" priority="first">
-Read explicit per-agent models for spawning:
-
-```bash
-executor_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-executor"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-codex-high")
-```
-
-Store resolved model for use in Task calls below.
-</step>
 
 <step name="load_project_state">
 Before any operation, read project state:
 
-```bash
-cat .planning/STATE.md 2>/dev/null
-```
+Use `read` to load `.planning/STATE.md` if it exists.
 
 **If file exists:** Parse and internalize:
 
@@ -48,16 +38,6 @@ Options:
 
 This ensures every execution has full project context.
 
-**Load planning config:**
-
-```bash
-# Check if planning docs should be committed (default: true)
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-# Auto-detect gitignored (overrides config)
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-Store `COMMIT_PLANNING_DOCS` for use in git operations.
 </step>
 
 <step name="identify_plan">
@@ -66,13 +46,7 @@ Find the next plan to execute:
 - Find plans in that phase directory
 - Identify first plan without corresponding SUMMARY
 
-```bash
-cat .planning/ROADMAP.md
-# Look for phase with "In progress" status
-# Then find plans in that phase
-ls .planning/phases/XX-name/*-PLAN.md 2>/dev/null | sort
-ls .planning/phases/XX-name/*-SUMMARY.md 2>/dev/null | sort
-```
+Use `read` to load `.planning/ROADMAP.md`, then use `glob` to list PLAN and SUMMARY files in the phase directory and sort by name.
 
 **Logic:**
 
@@ -160,7 +134,7 @@ grep -n "type=\"checkpoint" .planning/phases/XX-name/{phase}-{plan}-PLAN.md
 **If NO checkpoints found:**
 
 - **Fully autonomous plan** - spawn single subagent for entire plan
-- Subagent gets fresh 200k context, executes all tasks, creates SUMMARY, commits
+- Subagent gets fresh 200k context, executes all tasks, creates SUMMARY
 - Main context: Just orchestration (~5% usage)
 
 **If checkpoints found, parse into segments:**
@@ -187,7 +161,7 @@ IF segment follows checkpoint:decision OR checkpoint:human-action:
 **Pattern A: Fully autonomous (no checkpoints)**
 
 ```
-Spawn subagent → execute all tasks → SUMMARY → commit → report back
+Spawn subagent → execute all tasks → SUMMARY → report back
 ```
 
 **Pattern B: Segmented with verify-only checkpoints**
@@ -197,7 +171,7 @@ Segment 1 (tasks 1-3): Spawn subagent → execute → report back
 Checkpoint 4 (human-verify): Main context → you verify → continue
 Segment 2 (tasks 5-6): Spawn NEW subagent → execute → report back
 Checkpoint 7 (human-verify): Main context → you verify → continue
-Aggregate results → SUMMARY → commit
+Aggregate results → SUMMARY
 ```
 
 **Pattern C: Decision-dependent (must stay in main)**
@@ -217,15 +191,15 @@ No segmentation benefit - execute entirely in main
 ```
 1. Run init_agent_tracking step first (see step below)
 
-2. Use Task tool with subagent_type="gsd-executor" and model="{executor_model}":
+2. Use Task tool with subagent_type="gsd-executor":
 
    Prompt: "Execute plan at .planning/phases/{phase}-{plan}-PLAN.md
 
-   This is an autonomous plan (no checkpoints). Execute all tasks, create SUMMARY.md in phase directory, commit with message following plan's commit guidance.
+   This is an autonomous plan (no checkpoints). Execute all tasks, create SUMMARY.md in phase directory, and if commits are requested, commit with message following plan's commit guidance.
 
    Follow all deviation rules and authentication gate protocols from the plan.
 
-   When complete, report: plan name, tasks completed, SUMMARY path, commit hash."
+   When complete, report: plan name, tasks completed, SUMMARY path, commit hash (if created)."
 
 3. After Task tool returns with agent_id:
 
@@ -321,16 +295,16 @@ fi
 
 **If interrupted agent found:**
 - The agent ID file exists from a previous session that didn't complete
-- This agent can potentially be resumed using Task tool's `resume` parameter
-- Present to user: "Previous session was interrupted. Resume agent [ID] or start fresh?"
-- If resume: Use Task tool with `resume` parameter set to the interrupted ID
+- This agent can be continued by spawning a new Task using saved state
+- Present to user: "Previous session was interrupted. Continue from saved state or start fresh?"
+- If continue: Spawn a new Task using the saved context from agent-history.json
 - If fresh: Clear the file and proceed normally
 
 **3. Prune old entries (housekeeping):**
 
 If agent-history.json has more than `max_entries`:
 - Remove oldest entries with status "completed"
-- Never remove entries with status "spawned" (may need resume)
+- Never remove entries with status "spawned" (may need continuation)
 - Keep file under size limit for fast reads
 
 **When to run this step:**
@@ -369,7 +343,7 @@ For Pattern A (fully autonomous) and Pattern C (decision-dependent), skip this s
 
    B. If routing = Subagent:
       ```
-      Spawn Task tool with subagent_type="gsd-executor" and model="{executor_model}":
+      Spawn Task tool with subagent_type="gsd-executor":
 
       Prompt: "Execute tasks [task numbers/names] from plan at [plan path].
 
@@ -558,7 +532,7 @@ Execute each task in the prompt. **Deviations are normal** - handle them automat
    **If `type="auto"`:**
 
    **Before executing:** Check if task has `tdd="true"` attribute:
-   - If yes: Follow TDD execution flow (see `<tdd_execution>`) - RED → GREEN → REFACTOR cycle with atomic commits per stage
+- If yes: Follow TDD execution flow (see `<tdd_execution>`) - RED → GREEN → REFACTOR cycle with atomic commits per stage if commits are requested
    - If no: Standard implementation
 
    - Work toward task completion
@@ -567,8 +541,8 @@ Execute each task in the prompt. **Deviations are normal** - handle them automat
    - Continue implementing, applying rules as needed
    - Run the verification
    - Confirm done criteria met
-   - **Commit the task** (see `<task_commit>` below)
-   - Track task completion and commit hash for Summary documentation
+- **Commit the task** if commits are requested (see `<task_commit>` below)
+- Track task completion and commit hash for Summary documentation (if commits created)
    - Continue to next task
 
    **If `type="checkpoint:*"`:**
@@ -608,68 +582,6 @@ This is NOT a failure. Authentication gates are expected and normal. Handle them
 6. **Verify authentication works** - Test that credentials are valid
 7. **Retry the original task** - Resume automation where you left off
 8. **Continue normally** - Don't treat this as an error in Summary
-
-**Example: Vercel deployment hits auth error**
-
-```
-Task 3: Deploy to Vercel
-Running: vercel --yes
-
-Error: Not authenticated. Please run 'vercel login'
-
-[Create checkpoint dynamically]
-
-╔═══════════════════════════════════════════════════════╗
-║  CHECKPOINT: Action Required                          ║
-╚═══════════════════════════════════════════════════════╝
-
-Progress: 2/8 tasks complete
-Task: Authenticate Vercel CLI
-
-Attempted: vercel --yes
-Error: Not authenticated
-
-What you need to do:
-  1. Run: vercel login
-  2. Complete browser authentication
-
-I'll verify: vercel whoami returns your account
-
-────────────────────────────────────────────────────────
-→ YOUR ACTION: Type "done" when authenticated
-────────────────────────────────────────────────────────
-
-[Wait for user response]
-
-[User types "done"]
-
-Verifying authentication...
-Running: vercel whoami
-✓ Authenticated as: user@example.com
-
-Retrying deployment...
-Running: vercel --yes
-✓ Deployed to: https://myapp-abc123.vercel.app
-
-Task 3 complete. Continuing to task 4...
-```
-
-**In Summary documentation:**
-
-Document authentication gates as normal flow, not deviations:
-
-```markdown
-## Authentication Gates
-
-During execution, I encountered authentication requirements:
-
-1. Task 3: Vercel CLI required authentication
-   - Paused for `vercel login`
-   - Resumed after authentication
-   - Deployed successfully
-
-These are normal gates, not errors.
-```
 
 **Key principles:**
 
@@ -897,66 +809,13 @@ None - plan executed exactly as written.
 </deviation_documentation>
 
 <tdd_plan_execution>
-## TDD Plan Execution
-
-When executing a plan with `type: tdd` in frontmatter, follow the RED-GREEN-REFACTOR cycle for the single feature defined in the plan.
-
-**1. Check test infrastructure (if first TDD plan):**
-If no test framework configured:
-- Detect project type from package.json/requirements.txt/etc.
-- Install minimal test framework (Jest, pytest, Go testing, etc.)
-- Create test config file
-- Verify: run empty test suite
-- This is part of the RED phase, not a separate task
-
-**2. RED - Write failing test:**
-- Read `<behavior>` element for test specification
-- Create test file if doesn't exist (follow project conventions)
-- Write test(s) that describe expected behavior
-- Run tests - MUST fail (if passes, test is wrong or feature exists)
-- Commit: `test({phase}-{plan}): add failing test for [feature]`
-
-**3. GREEN - Implement to pass:**
-- Read `<implementation>` element for guidance
-- Write minimal code to make test pass
-- Run tests - MUST pass
-- Commit: `feat({phase}-{plan}): implement [feature]`
-
-**4. REFACTOR (if needed):**
-- Clean up code if obvious improvements
-- Run tests - MUST still pass
-- Commit only if changes made: `refactor({phase}-{plan}): clean up [feature]`
-
-**Commit pattern for TDD plans:**
-Each TDD plan produces 2-3 atomic commits:
-1. `test({phase}-{plan}): add failing test for X`
-2. `feat({phase}-{plan}): implement X`
-3. `refactor({phase}-{plan}): clean up X` (optional)
-
-**Error handling:**
-- If test doesn't fail in RED phase: Test is wrong or feature already exists. Investigate before proceeding.
-- If test doesn't pass in GREEN phase: Debug implementation, keep iterating until green.
-- If tests fail in REFACTOR phase: Undo refactor, commit was premature.
-
-**Verification:**
-After TDD plan completion, ensure:
-- All tests pass
-- Test coverage for the new behavior exists
-- No unrelated tests broken
-
-**Why TDD uses dedicated plans:** TDD requires 2-3 execution cycles (RED → GREEN → REFACTOR), each with file reads, test runs, and potential debugging. This consumes 40-50% of context for a single feature. Dedicated plans ensure full quality throughout the cycle.
-
-**Comparison:**
-- Standard plans: Multiple tasks, 1 commit per task, 2-4 commits total
-- TDD plans: Single feature, 2-3 commits for RED/GREEN/REFACTOR cycle
-
-See `~/.config/opencode/get-shit-done/references/tdd.md` for TDD plan structure.
+See `get-shit-done/references/tdd.md` for TDD execution flow and commit pattern.
 </tdd_plan_execution>
 
 <task_commit>
 ## Task Commit Protocol
 
-After each task completes (verification passed, done criteria met), commit immediately:
+If commits are requested, commit immediately after each task completes (verification passed, done criteria met):
 
 **1. Identify modified files:**
 
@@ -1165,13 +1024,11 @@ Ran `npx convex dev` to initialize Convex backend
 "Error: Not authenticated. Run `npx convex login` first."
 
 **What you need to do:**
-1. Run: `npx convex login`
-2. Complete browser authentication
-3. Run: `npx convex dev`
-4. Create project when prompted
+1. Complete the browser authentication flow when prompted
+2. Create the project when prompted
 
 **I'll verify after:**
-`cat .env.local | grep CONVEX` returns the Convex URL
+`npx convex dev` completes successfully
 
 ### Awaiting
 
@@ -1500,100 +1357,13 @@ ROADMAP_FILE=".planning/ROADMAP.md"
 </step>
 
 <step name="git_commit_metadata">
-Commit execution metadata (SUMMARY + STATE + ROADMAP):
-
-**Note:** All task code has already been committed during execution (one commit per task).
-PLAN.md was already committed during plan-phase. This final commit captures execution results only.
-
-**Check planning config:**
-
-If `COMMIT_PLANNING_DOCS=false` (set in load_project_state):
-- Skip all git operations for .planning/ files
-- Planning docs exist locally but are gitignored
-- Log: "Skipping planning docs commit (planning.commit_docs: false)"
-- Proceed to next step
-
-If `COMMIT_PLANNING_DOCS=true` (default):
-- Continue with git operations below
-
-**1. Stage execution artifacts:**
-
-```bash
-git add .planning/phases/XX-name/{phase}-{plan}-SUMMARY.md
-git add .planning/STATE.md
-```
-
-**2. Stage roadmap:**
-
-```bash
-git add .planning/ROADMAP.md
-```
-
-**3. Verify staging:**
-
-```bash
-git status
-# Should show only execution artifacts (SUMMARY, STATE, ROADMAP), no code files
-```
-
-**4. Commit metadata:**
-
-```bash
-git commit -m "$(cat <<'EOF'
-docs({phase}-{plan}): complete [plan-name] plan
-
-Tasks completed: [N]/[N]
-- [Task 1 name]
-- [Task 2 name]
-- [Task 3 name]
-
-SUMMARY: .planning/phases/XX-name/{phase}-{plan}-SUMMARY.md
-EOF
-)"
-```
-
-**Example:**
-
-```bash
-git commit -m "$(cat <<'EOF'
-docs(08-02): complete user registration plan
-
-Tasks completed: 3/3
-- User registration endpoint
-- Password hashing with bcrypt
-- Email confirmation flow
-
-SUMMARY: .planning/phases/08-user-auth/08-02-registration-SUMMARY.md
-EOF
-)"
-```
-
-**Git log after plan execution:**
-
-```
-abc123f docs(08-02): complete user registration plan
-def456g feat(08-02): add email confirmation flow
-hij789k feat(08-02): implement password hashing with bcrypt
-lmn012o feat(08-02): create user registration endpoint
-```
-
-Each task has its own commit, followed by one metadata commit documenting plan completion.
-
-See `git-integration.md` (loaded via required_reading) for commit message conventions.
+Do not commit `.planning/` artifacts. Skip git operations and proceed to the next step.
 </step>
 
 <step name="update_codebase_map">
 **If .planning/codebase/ exists:**
 
-Check what changed across all task commits in this plan:
-
-```bash
-# Find first task commit (right after previous plan's docs commit)
-FIRST_TASK=$(git log --oneline --grep="feat({phase}-{plan}):" --grep="fix({phase}-{plan}):" --grep="test({phase}-{plan}):" --reverse | head -1 | cut -d' ' -f1)
-
-# Get all changes from first task through now
-git diff --name-only ${FIRST_TASK}^..HEAD 2>/dev/null
-```
+Review file changes from this plan (use git diff if commits exist; otherwise inspect the working tree).
 
 **Update only if structural changes occurred:**
 
@@ -1614,10 +1384,6 @@ git diff --name-only ${FIRST_TASK}^..HEAD 2>/dev/null
 **Update format:**
 Make single targeted edits - add a bullet point, update a path, or remove a stale entry. Don't rewrite sections.
 
-```bash
-git add .planning/codebase/*.md
-git commit --amend --no-edit  # Include in metadata commit
-```
 
 **If .planning/codebase/ doesn't exist:**
 Skip this step.

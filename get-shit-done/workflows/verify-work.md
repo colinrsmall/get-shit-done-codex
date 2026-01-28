@@ -20,23 +20,10 @@ No Pass/Fail buttons. No severity questions. Just: "Here's what should happen. D
 
 <process>
 
-<step name="resolve_models" priority="first">
-Read explicit per-agent models for spawning:
-
-```bash
-planner_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-planner"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-high")
-checker_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-plan-checker"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-high")
-```
-
-Store resolved models for use in Task calls below.
-</step>
-
 <step name="check_active_session">
 **First: Check for active UAT sessions**
 
-```bash
-find .planning/phases -name "*-UAT.md" -type f 2>/dev/null | head -5
-```
+Use `glob` to find `.planning/phases/**/*-UAT.md` (limit to a few recent files).
 
 **If active sessions exist AND no $ARGUMENTS provided:**
 
@@ -283,7 +270,7 @@ Proceed to `present_test`.
 </step>
 
 <step name="complete_session">
-**Complete testing and commit:**
+**Complete testing:**
 
 Update frontmatter:
 - status: complete
@@ -294,23 +281,6 @@ Clear Current Test section:
 ## Current Test
 
 [testing complete]
-```
-
-**Check planning config:**
-
-```bash
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
-Commit the UAT file:
-```bash
-git add ".planning/phases/XX-name/{phase}-UAT.md"
-git commit -m "test({phase}): complete UAT - {passed} passed, {issues} issues"
 ```
 
 Present summary:
@@ -366,9 +336,6 @@ Diagnosis runs automatically - no user prompt. Parallel agents investigate simul
 
 Display:
 ```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► PLANNING FIXES
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ◆ Spawning planner for gap closure...
 ```
@@ -400,7 +367,6 @@ Plans must be executable prompts.
 </downstream_consumer>
 """,
   subagent_type="gsd-planner",
-  model="{planner_model}",
   description="Plan gap fixes for Phase {phase}"
 )
 ```
@@ -415,9 +381,6 @@ On return:
 
 Display:
 ```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► VERIFYING FIX PLANS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ◆ Spawning plan checker...
 ```
@@ -446,7 +409,6 @@ Return one of:
 </expected_output>
 """,
   subagent_type="gsd-plan-checker",
-  model="{checker_model}",
   description="Verify Phase {phase} fix plans"
 )
 ```
@@ -487,7 +449,6 @@ Do NOT replan from scratch unless issues are fundamental.
 </instructions>
 """,
   subagent_type="gsd-planner",
-  model="{planner_model}",
   description="Revise Phase {phase} plans"
 )
 ```
@@ -511,9 +472,6 @@ Wait for user response.
 **Present completion and next steps:**
 
 ```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► FIXES READY ✓
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 **Phase {X}: {Name}** — {N} gap(s) diagnosed, {M} fix plan(s) created
 

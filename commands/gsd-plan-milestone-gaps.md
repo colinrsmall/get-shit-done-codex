@@ -155,23 +155,9 @@ Add new phases to current milestone:
 mkdir -p ".planning/phases/{NN}-{name}"
 ```
 
-## 8. Commit Roadmap Update
+## 8. Skip Planning Commits
 
-**Check planning config:**
-
-```bash
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
-```bash
-git add .planning/ROADMAP.md
-git commit -m "docs(roadmap): add gap closure phases {N}-{M}"
-```
+Do not commit `.planning/` artifacts.
 
 ## 9. Offer Next Steps
 
@@ -289,6 +275,6 @@ becomes:
 - [ ] User confirmed phase plan
 - [ ] ROADMAP.md updated with new phases
 - [ ] Phase directories created
-- [ ] Changes committed
+- [ ] Changes recorded locally
 - [ ] User knows to run `/gsd-plan-phase` next
 </success_criteria>

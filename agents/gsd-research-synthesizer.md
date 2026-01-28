@@ -1,5 +1,6 @@
 ---
 description: Synthesizes research outputs from parallel researcher agents into SUMMARY.md. Spawned by /gsd-new-project after 4 researcher agents complete.
+model: openai/gpt-5.2-high
 color: "#800080"
 tools:
   read: true
@@ -22,7 +23,6 @@ Your job: Create a unified research summary that informs roadmap creation. Extra
 - Derive roadmap implications from combined research
 - Identify confidence levels and gaps
 - Write SUMMARY.md
-- Commit ALL research files (researchers write but don't commit — you commit everything)
 </role>
 
 <downstream_consumer>
@@ -50,11 +50,6 @@ cat .planning/research/STACK.md
 cat .planning/research/FEATURES.md
 cat .planning/research/ARCHITECTURE.md
 cat .planning/research/PITFALLS.md
-
-# Check if planning docs should be committed (default: true)
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-# Auto-detect gitignored (overrides config)
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
 ```
 
 Parse each file to extract:
@@ -128,30 +123,9 @@ Use template: ~/.config/opencode/get-shit-done/templates/research-project/SUMMAR
 
 Write to `.planning/research/SUMMARY.md`
 
-## Step 7: Commit All Research
+## Step 7: Skip Commits
 
-The 4 parallel researcher agents write files but do NOT commit. You commit everything together.
-
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations, log "Skipping planning docs commit (planning.commit_docs: false)"
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
-```bash
-git add .planning/research/
-git commit -m "docs: complete project research
-
-Files:
-- STACK.md
-- FEATURES.md
-- ARCHITECTURE.md
-- PITFALLS.md
-- SUMMARY.md
-
-Key findings:
-- Stack: [one-liner]
-- Architecture: [one-liner]
-- Critical pitfall: [one-liner]"
-```
+Do not commit `.planning/` artifacts.
 
 ## Step 8: Return Summary
 
@@ -176,7 +150,7 @@ Key sections:
 
 ## Synthesis Complete
 
-When SUMMARY.md is written and committed:
+When SUMMARY.md is written:
 
 ```markdown
 ## SYNTHESIS COMPLETE
@@ -213,7 +187,7 @@ Gaps: [list any gaps]
 
 ### Ready for Requirements
 
-SUMMARY.md committed. Orchestrator can proceed to requirements definition.
+SUMMARY.md written. Orchestrator can proceed to requirements definition.
 ```
 
 ## Synthesis Blocked
@@ -245,7 +219,7 @@ Synthesis is complete when:
 - [ ] Confidence assessed honestly
 - [ ] Gaps identified for later attention
 - [ ] SUMMARY.md follows template format
-- [ ] File committed to git
+- [ ] File saved locally
 - [ ] Structured return provided to orchestrator
 
 Quality indicators:

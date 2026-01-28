@@ -13,23 +13,10 @@ Read config.json for planning behavior settings.
 
 <process>
 
-<step name="resolve_models" priority="first">
-Read explicit per-agent models for spawning:
-
-```bash
-executor_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-executor"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-codex-high")
-verifier_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-verifier"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-high")
-```
-
-Store resolved models for use in Task calls below.
-</step>
-
 <step name="load_project_state">
 Before any operation, read project state:
 
-```bash
-cat .planning/STATE.md 2>/dev/null
-```
+Use `read` to load `.planning/STATE.md` if it exists.
 
 **If file exists:** Parse and internalize:
 - Current position (phase, plan, status)
@@ -46,16 +33,6 @@ Options:
 
 **If .planning/ doesn't exist:** Error - project not initialized.
 
-**Load planning config:**
-
-```bash
-# Check if planning docs should be committed (default: true)
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-# Auto-detect gitignored (overrides config)
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-Store `COMMIT_PLANNING_DOCS` for use in git operations.
 </step>
 
 <step name="validate_phase">
@@ -285,7 +262,7 @@ Plans with `autonomous: false` require user interaction.
 
 1. **Spawn agent for checkpoint plan:**
    ```
-   Task(prompt="{subagent-task-prompt}", subagent_type="gsd-executor", model="{executor_model}")
+   Task(prompt="{subagent-task-prompt}", subagent_type="gsd-executor")
    ```
 
 2. **Agent runs until checkpoint:**
@@ -322,11 +299,10 @@ Plans with `autonomous: false` require user interaction.
 
    Use the continuation-prompt.md template:
    ```
-   Task(
-     prompt=filled_continuation_template,
-     subagent_type="gsd-executor",
-     model="{executor_model}"
-   )
+    Task(
+      prompt=filled_continuation_template,
+      subagent_type="gsd-executor"
+    )
    ```
 
    Fill template with:
@@ -401,8 +377,7 @@ Phase goal: {goal from ROADMAP.md}
 
 Check must_haves against actual codebase. Create VERIFICATION.md.
 Verify what actually exists in the code.",
-  subagent_type="gsd-verifier",
-  model="{verifier_model}"
+  subagent_type="gsd-verifier"
 )
 ```
 
@@ -495,23 +470,6 @@ Update ROADMAP.md to reflect phase completion:
 # Update status
 ```
 
-**Check planning config:**
-
-If `COMMIT_PLANNING_DOCS=false` (set in load_project_state):
-- Skip all git operations for .planning/ files
-- Planning docs exist locally but are gitignored
-- Log: "Skipping planning docs commit (planning.commit_docs: false)"
-- Proceed to offer_next step
-
-If `COMMIT_PLANNING_DOCS=true` (default):
-- Continue with git operations below
-
-Commit phase completion (roadmap, state, verification):
-```bash
-git add .planning/ROADMAP.md .planning/STATE.md .planning/phases/{phase_dir}/*-VERIFICATION.md
-git add .planning/REQUIREMENTS.md  # if updated
-git commit -m "docs(phase-{X}): complete phase execution"
-```
 </step>
 
 <step name="offer_next">

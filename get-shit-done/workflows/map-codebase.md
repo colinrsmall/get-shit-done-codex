@@ -22,22 +22,10 @@ Documents are reference material for the assistant when planning/executing. Alwa
 
 <process>
 
-<step name="resolve_models" priority="first">
-Read explicit model for agent spawning:
-
-```bash
-mapper_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-codebase-mapper"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-high")
-```
-
-Store resolved model for use in Task calls below.
-</step>
-
 <step name="check_existing">
 Check if .planning/codebase/ already exists:
 
-```bash
-ls -la .planning/codebase/ 2>/dev/null
-```
+Use `list` to show `.planning/codebase/` contents (if present).
 
 **If exists:**
 
@@ -83,7 +71,7 @@ Continue to spawn_agents.
 <step name="spawn_agents">
 Spawn 4 parallel gsd-codebase-mapper agents.
 
-Use Task tool with `subagent_type="gsd-codebase-mapper"`, `model="{mapper_model}"`, and `run_in_background=true` for parallel execution.
+Use Task tool with `subagent_type="gsd-codebase-mapper"` and run the agents in parallel.
 
 **CRITICAL:** Use the dedicated `gsd-codebase-mapper` agent, NOT `Explore`. The mapper agent writes documents directly.
 
@@ -92,8 +80,6 @@ Use Task tool with `subagent_type="gsd-codebase-mapper"`, `model="{mapper_model}
 Task tool parameters:
 ```
 subagent_type: "gsd-codebase-mapper"
-model: "{mapper_model}"
-run_in_background: true
 description: "Map codebase tech stack"
 ```
 
@@ -115,8 +101,6 @@ Explore thoroughly. Write documents directly using templates. Return confirmatio
 Task tool parameters:
 ```
 subagent_type: "gsd-codebase-mapper"
-model: "{mapper_model}"
-run_in_background: true
 description: "Map codebase architecture"
 ```
 
@@ -138,8 +122,6 @@ Explore thoroughly. Write documents directly using templates. Return confirmatio
 Task tool parameters:
 ```
 subagent_type: "gsd-codebase-mapper"
-model: "{mapper_model}"
-run_in_background: true
 description: "Map codebase conventions"
 ```
 
@@ -161,8 +143,6 @@ Explore thoroughly. Write documents directly using templates. Return confirmatio
 Task tool parameters:
 ```
 subagent_type: "gsd-codebase-mapper"
-model: "{mapper_model}"
-run_in_background: true
 description: "Map codebase concerns"
 ```
 
@@ -208,10 +188,8 @@ Continue to verify_output.
 <step name="verify_output">
 Verify all documents created successfully:
 
-```bash
-ls -la .planning/codebase/
-wc -l .planning/codebase/*.md
-```
+- Use `glob` to list `.planning/codebase/*.md`
+- Use `read` to confirm each file is non-empty (line count via last line number in Read output)
 
 **Verification checklist:**
 - All 7 documents exist
@@ -223,45 +201,14 @@ Continue to commit_codebase_map.
 </step>
 
 <step name="commit_codebase_map">
-Commit the codebase map:
-
-**Check planning config:**
-
-```bash
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
-```bash
-git add .planning/codebase/*.md
-git commit -m "$(cat <<'EOF'
-docs: map existing codebase
-
-- STACK.md - Technologies and dependencies
-- ARCHITECTURE.md - System design and patterns
-- STRUCTURE.md - Directory layout
-- CONVENTIONS.md - Code style and patterns
-- TESTING.md - Test structure
-- INTEGRATIONS.md - External services
-- CONCERNS.md - Technical debt and issues
-EOF
-)"
-```
-
-Continue to offer_next.
+Do not commit `.planning/` artifacts. Continue to offer_next.
 </step>
 
 <step name="offer_next">
 Present completion summary and next steps.
 
 **Get line counts:**
-```bash
-wc -l .planning/codebase/*.md
-```
+Use `read` to capture line counts (last line number per file).
 
 **Output format:**
 
@@ -305,10 +252,10 @@ End workflow.
 
 <success_criteria>
 - .planning/codebase/ directory created
-- 4 parallel gsd-codebase-mapper agents spawned with run_in_background=true
+- 4 parallel gsd-codebase-mapper agents spawned
 - Agents write documents directly (orchestrator doesn't receive document contents)
 - Read agent output files to collect confirmations
 - All 7 codebase documents exist
 - Clear completion summary with line counts
-- User offered clear next steps in GSD style
+- User offered clear next steps
 </success_criteria>

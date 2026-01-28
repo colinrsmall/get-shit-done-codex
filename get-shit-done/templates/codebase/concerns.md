@@ -213,12 +213,6 @@ Template for `.planning/codebase/CONCERNS.md` - captures known issues and areas 
 - Symptoms at limit: 429 rate limit errors, DB writes fail
 - Scaling path: Upgrade to Pro ($25/mo) extends to 8GB DB, 100GB storage
 
-**Server-side render blocking:**
-- Current capacity: ~50 concurrent users before slowdown
-- Limit: Vercel Hobby plan (10s function timeout, 100GB-hrs/mo)
-- Symptoms at limit: 504 gateway timeouts on course pages
-- Scaling path: Upgrade to Vercel Pro ($20/mo), add edge caching
-
 ## Dependencies at Risk
 
 **react-hot-toast:**

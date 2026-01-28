@@ -31,7 +31,7 @@ Find current phase directory from most recently modified files.
 4. **Decisions made**: Key decisions and rationale
 5. **Blockers/issues**: Anything stuck
 6. **Mental context**: The approach, next steps, "vibe"
-7. **Files modified**: What's changed but not committed
+7. **Files modified**: What's changed in the working tree
 
 Ask user for clarifications if needed.
 </step>
@@ -89,21 +89,7 @@ Be specific enough for a fresh assistant to understand immediately.
 </step>
 
 <step name="commit">
-**Check planning config:**
-
-```bash
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
-```bash
-git add .planning/phases/*/.continue-here.md
-git commit -m "wip: [phase-name] paused at task [X]/[Y]"
-```
+Do not commit `.planning/` artifacts.
 </step>
 
 <step name="confirm">

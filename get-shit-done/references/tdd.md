@@ -96,20 +96,20 @@ After completion, create SUMMARY.md with:
 2. Write test describing expected behavior (from `<behavior>` element)
 3. Run test - it MUST fail
 4. If test passes: feature exists or test is wrong. Investigate.
-5. Commit: `test({phase}-{plan}): add failing test for [feature]`
+5. If commits are requested: `test({phase}-{plan}): add failing test for [feature]`
 
 **GREEN - Implement to pass:**
 1. Write minimal code to make test pass
 2. No cleverness, no optimization - just make it work
 3. Run test - it MUST pass
-4. Commit: `feat({phase}-{plan}): implement [feature]`
+4. If commits are requested: `feat({phase}-{plan}): implement [feature]`
 
 **REFACTOR (if needed):**
 1. Clean up implementation if obvious improvements exist
 2. Run tests - MUST still pass
-3. Only commit if changes made: `refactor({phase}-{plan}): clean up [feature]`
+3. If commits are requested, only commit if changes made: `refactor({phase}-{plan}): clean up [feature]`
 
-**Result:** Each TDD plan produces 2-3 atomic commits.
+**Result:** If commits are requested, each TDD plan produces 2-3 atomic commits.
 </execution_flow>
 
 <test_quality>
@@ -212,7 +212,7 @@ Framework setup is a one-time cost included in the first TDD plan's RED phase.
 <commit_pattern>
 ## Commit Pattern for TDD Plans
 
-TDD plans produce 2-3 atomic commits (one per phase):
+If commits are requested, TDD plans produce 2-3 atomic commits (one per phase):
 
 ```
 test(08-02): add failing test for email validation
@@ -235,8 +235,8 @@ refactor(08-02): extract regex to constant (optional)
 ```
 
 **Comparison with standard plans:**
-- Standard plans: 1 commit per task, 2-4 commits per plan
-- TDD plans: 2-3 commits for single feature
+- If commits are requested, standard plans: 1 commit per task, 2-4 commits per plan
+- If commits are requested, TDD plans: 2-3 commits for single feature
 
 Both follow same format: `{type}({phase}-{plan}): {description}`
 

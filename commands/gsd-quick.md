@@ -1,5 +1,5 @@
 ---
-description: Execute a quick task with GSD guarantees (atomic commits, state tracking) but skip optional agents
+description: Execute a quick task with GSD guarantees (state tracking; optional per-task commits when requested) but skip optional agents
 argument-hint: ""
 tools:
   read: true
@@ -13,7 +13,7 @@ tools:
 ---
 
 <objective>
-Execute small, ad-hoc tasks with GSD guarantees (atomic commits, STATE.md tracking) while skipping optional agents (research, plan-checker, verifier).
+Execute small, ad-hoc tasks with GSD guarantees (STATE.md tracking; optional per-task commits when requested) while skipping optional agents (research, plan-checker, verifier).
 
 Quick mode is the same system with a shorter path:
 - Spawns gsd-planner (quick mode) + gsd-executor(s)
@@ -33,19 +33,6 @@ Orchestration is inline - no separate workflow file. Quick mode is deliberately 
 </context>
 
 <process>
-**Step 0: Resolve Models**
-
-Read explicit per-agent models for spawning:
-
-```bash
-planner_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-planner"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-high")
-executor_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-executor"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-codex-high")
-```
-
-Store resolved models for use in Task calls below.
-
----
-
 **Step 1: Pre-flight validation**
 
 Check that an active GSD project exists:
@@ -150,7 +137,6 @@ Return: ## PLANNING COMPLETE with plan path
 </output>
 ",
   subagent_type="gsd-planner",
-  model="{planner_model}",
   description="Quick plan: ${DESCRIPTION}"
 )
 ```
@@ -168,6 +154,11 @@ If plan not found, error: "Planner failed to create ${next_num}-PLAN.md"
 
 Spawn gsd-executor with plan reference:
 
+If commits are requested in this session, capture current HEAD:
+```bash
+before_head=$(git rev-parse --short HEAD 2>/dev/null || echo "")
+```
+
 ```
 Task(
   prompt="
@@ -178,23 +169,39 @@ Project state: @.planning/STATE.md
 
 <constraints>
 - Execute all tasks in the plan
-- Commit each task atomically
+- If commits are requested in this session, commit each task atomically
 - Create summary at: ${QUICK_DIR}/${next_num}-SUMMARY.md
 - Do NOT update ROADMAP.md (quick tasks are separate from planned phases)
 </constraints>
 ",
   subagent_type="gsd-executor",
-  model="{executor_model}",
   description="Execute: ${DESCRIPTION}"
 )
 ```
 
 After executor returns:
 1. Verify summary exists at `${QUICK_DIR}/${next_num}-SUMMARY.md`
-2. Extract commit hash from executor output
+2. If commits were requested: compute commit hash (range if possible). Otherwise set `commit_hash="-"`.
 3. Report completion status
 
 If summary not found, error: "Executor failed to create ${next_num}-SUMMARY.md"
+
+If commits were requested:
+```bash
+after_head=$(git rev-parse --short HEAD 2>/dev/null || echo "")
+if [ -n "$before_head" ] && [ -n "$after_head" ] && [ "$after_head" != "$before_head" ]; then
+  commit_hash="${before_head}..${after_head}"
+elif [ -n "$after_head" ]; then
+  commit_hash="$after_head"
+else
+  commit_hash="-"
+fi
+```
+
+If commits were not requested:
+```
+commit_hash="-"
+```
 
 Note: For quick tasks producing multiple plans (rare), spawn executors in parallel waves per execute-phase patterns.
 
@@ -215,8 +222,8 @@ Insert after `### Blockers/Concerns` section:
 ```markdown
 ### Quick Tasks Completed
 
-| # | Description | Date | Commit | Directory |
-|---|-------------|------|--------|-----------|
+| # | Description | Date | Commits | Directory |
+|---|-------------|------|---------|-----------|
 ```
 
 **7c. Append new row to table:**
@@ -236,29 +243,9 @@ Use Edit tool to make these changes atomically
 
 ---
 
-**Step 8: Final commit and completion**
+**Step 8: Skip planning commits**
 
-Stage and commit quick task artifacts:
-
-```bash
-# Stage quick task artifacts
-git add ${QUICK_DIR}/${next_num}-PLAN.md
-git add ${QUICK_DIR}/${next_num}-SUMMARY.md
-git add .planning/STATE.md
-
-# Commit with quick task format
-git commit -m "$(cat <<'EOF'
-docs(quick-${next_num}): ${DESCRIPTION}
-
-Quick task completed.
-EOF
-)"
-```
-
-Get final commit hash:
-```bash
-commit_hash=$(git rev-parse --short HEAD)
-```
+Do not commit `.planning/` artifacts.
 
 Display completion output:
 ```
@@ -269,7 +256,7 @@ GSD > QUICK TASK COMPLETE
 Quick Task ${next_num}: ${DESCRIPTION}
 
 Summary: ${QUICK_DIR}/${next_num}-SUMMARY.md
-Commit: ${commit_hash}
+Commits: ${commit_hash}
 
 ---
 
@@ -287,5 +274,5 @@ Ready for next task: /gsd-quick
 - [ ] `${next_num}-PLAN.md` created by planner
 - [ ] `${next_num}-SUMMARY.md` created by executor
 - [ ] STATE.md updated with quick task row
-- [ ] Artifacts committed
+- [ ] Artifacts recorded locally
 </success_criteria>

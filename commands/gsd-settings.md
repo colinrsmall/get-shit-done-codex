@@ -75,12 +75,8 @@ Write updated config to `.planning/config.json`.
 
 ## 5. Confirm Changes
 
-Display:
 
 ```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► SETTINGS UPDATED
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 | Setting              | Value |
 |----------------------|-------|
@@ -95,7 +91,7 @@ Quick commands:
 - /gsd-plan-phase --skip-research — skip research
 - /gsd-plan-phase --skip-verify — skip plan check
 
-To change which models agents use, edit `.planning/config.json` `models`.
+To change which models agents use, edit agent headers in `agents/*.md`.
 ```
 
 </process>

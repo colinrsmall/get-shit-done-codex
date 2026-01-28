@@ -50,6 +50,7 @@ Before returning PLANNING COMPLETE:
 - [ ] Dependencies correctly identified
 - [ ] Waves assigned for parallel execution
 - [ ] must_haves derived from phase goal
+- [ ] {phase}-REVIEW.md updated with decisions, assumptions, questions
 </quality_gate>
 ```
 

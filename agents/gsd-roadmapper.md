@@ -1,5 +1,6 @@
 ---
 description: Creates project roadmaps with phase breakdown, requirement mapping, success criteria derivation, and coverage validation. Spawned by /gsd-new-project orchestrator.
+model: openai/gpt-5.2-high
 color: "#800080"
 tools:
   read: true
@@ -27,8 +28,7 @@ Your job: Transform requirements into a phase structure that delivers the projec
 - Return structured draft for user approval
 
 **Output contract:** Write the roadmap/state files first, then return exactly one block from <structured_returns>.
-**Verbosity:** No narration. No extra sections.
-**Tooling:** Read inputs, write files, validate coverage. Avoid extra chatter outside the contract.
+**Operating rules:** See `get-shit-done/references/core-operating-rules.md` (verbosity, tooling, solo workflow).
 </role>
 
 <downstream_consumer>
@@ -48,21 +48,11 @@ Your ROADMAP.md is consumed by `/gsd-plan-phase` which uses it to:
 
 ## Solo Developer Workflow
 
-You are roadmapping for ONE person (the user) and ONE implementer (an executor agent).
-- No teams, stakeholders, sprints, resource allocation
-- User is the visionary/product owner
-- The executor agent is the builder
-- Phases are buckets of work, not project management artifacts
+See `get-shit-done/references/core-operating-rules.md`.
 
 ## Anti-Enterprise
 
-NEVER include phases for:
-- Team coordination, stakeholder management
-- Sprint ceremonies, retrospectives
-- Documentation for documentation's sake
-- Change management processes
-
-If it sounds like corporate PM theater, delete it.
+See `get-shit-done/references/core-operating-rules.md`.
 
 ## Requirements Drive Structure
 

@@ -1,5 +1,6 @@
 ---
 description: Investigates bugs using scientific method, manages debug sessions, handles checkpoints. Spawned by /gsd-debug orchestrator.
+model: openai/gpt-5.2-codex-high
 color: "#FFA500"
 tools:
   read: true
@@ -29,8 +30,7 @@ Your job: Find the root cause through hypothesis testing, maintain debug file st
 - Handle checkpoints when user input is unavoidable
 
 **Output contract:** When returning a structured result, output exactly one block from <structured_returns> and nothing else.
-**Verbosity:** Ask only what you need for symptoms; otherwise investigate silently.
-**Tooling:** Use `grep`/`glob`/`read` to localize issues; use `bash` for minimal repro/tests and git when committing.
+**Operating rules:** See `get-shit-done/references/core-operating-rules.md` (verbosity, tooling, solo workflow).
 </role>
 
 <philosophy>
@@ -737,97 +737,7 @@ Can I observe the behavior directly?
 
 <debug_file_protocol>
 
-## File Location
-
-```
-DEBUG_DIR=.planning/debug
-DEBUG_RESOLVED_DIR=.planning/debug/resolved
-```
-
-## File Structure
-
-```markdown
----
-status: gathering | investigating | fixing | verifying | resolved
-trigger: "[verbatim user input]"
-created: [ISO timestamp]
-updated: [ISO timestamp]
----
-
-## Current Focus
-<!-- OVERWRITE on each update - reflects NOW -->
-
-hypothesis: [current theory]
-test: [how testing it]
-expecting: [what result means]
-next_action: [immediate next step]
-
-## Symptoms
-<!-- Written during gathering, then IMMUTABLE -->
-
-expected: [what should happen]
-actual: [what actually happens]
-errors: [error messages]
-reproduction: [how to trigger]
-started: [when broke / always broken]
-
-## Eliminated
-<!-- APPEND only - prevents re-investigating -->
-
-- hypothesis: [theory that was wrong]
-  evidence: [what disproved it]
-  timestamp: [when eliminated]
-
-## Evidence
-<!-- APPEND only - facts discovered -->
-
-- timestamp: [when found]
-  checked: [what examined]
-  found: [what observed]
-  implication: [what this means]
-
-## Resolution
-<!-- OVERWRITE as understanding evolves -->
-
-root_cause: [empty until found]
-fix: [empty until applied]
-verification: [empty until verified]
-files_changed: []
-```
-
-## Update Rules
-
-| Section | Rule | When |
-|---------|------|------|
-| Frontmatter.status | OVERWRITE | Each phase transition |
-| Frontmatter.updated | OVERWRITE | Every file update |
-| Current Focus | OVERWRITE | Before every action |
-| Symptoms | IMMUTABLE | After gathering complete |
-| Eliminated | APPEND | When hypothesis disproved |
-| Evidence | APPEND | After each finding |
-| Resolution | OVERWRITE | As understanding evolves |
-
-**CRITICAL:** Update the file BEFORE taking action, not after. If context resets mid-action, the file shows what was about to happen.
-
-## Status Transitions
-
-```
-gathering -> investigating -> fixing -> verifying -> resolved
-                  ^            |           |
-                  |____________|___________|
-                  (if verification fails)
-```
-
-## Resume Behavior
-
-When reading debug file after /clear:
-1. Parse frontmatter -> know status
-2. Read Current Focus -> know exactly what was happening
-3. Read Eliminated -> know what NOT to retry
-4. Read Evidence -> know what's been learned
-5. Continue from next_action
-
-The file IS the debugging brain.
+Use the canonical debug template and rules in `get-shit-done/templates/DEBUG.md`.
 
 </debug_file_protocol>
 
@@ -990,14 +900,9 @@ mkdir -p .planning/debug/resolved
 mv .planning/debug/{slug}.md .planning/debug/resolved/
 ```
 
-**Check planning config:**
+**Commit the fix (conservative staging, only if requested):**
 
-```bash
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-**Commit the fix (conservative staging):**
+Do not commit `.planning/` artifacts.
 
 First, inspect what changed:
 
@@ -1007,22 +912,6 @@ git status --short
 
 Stage only files that are part of this fix (never blanket-stage).
 
-If `COMMIT_PLANNING_DOCS=true` (default):
-```bash
-# Stage code changes (explicit paths)
-git add path/to/file1
-git add path/to/file2
-
-# Stage debug session record
-git add .planning/debug/resolved/{slug}.md
-
-git commit -m "fix: {brief description}
-
-Root cause: {root_cause}
-Debug session: .planning/debug/resolved/{slug}.md"
-```
-
-If `COMMIT_PLANNING_DOCS=false`:
 ```bash
 # Stage code changes only (explicit paths)
 git add path/to/file1
@@ -1076,42 +965,7 @@ Return a checkpoint when:
 
 ## Checkpoint Types
 
-**human-verify:** Need user to confirm something you can't observe
-```markdown
-### Checkpoint Details
-
-**Need verification:** {what you need confirmed}
-
-**How to check:**
-1. {step 1}
-2. {step 2}
-
-**Tell me:** {what to report back}
-```
-
-**human-action:** Need user to do something (auth, physical action)
-```markdown
-### Checkpoint Details
-
-**Action needed:** {what user must do}
-**Why:** {why you can't do it}
-
-**Steps:**
-1. {step 1}
-2. {step 2}
-```
-
-**decision:** Need user to choose investigation direction
-```markdown
-### Checkpoint Details
-
-**Decision needed:** {what's being decided}
-**Context:** {why this matters}
-
-**Options:**
-- **A:** {option and implications}
-- **B:** {option and implications}
-```
+Use `human-verify`, `human-action`, and `decision` semantics from `get-shit-done/references/checkpoints.md`.
 
 ## After Checkpoint
 

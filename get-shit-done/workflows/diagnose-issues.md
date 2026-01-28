@@ -80,7 +80,7 @@ For each gap, fill the debug-subagent-prompt template and spawn:
 ```
 Task(
   prompt=filled_debug_subagent_prompt,
-  subagent_type="general-purpose",
+  subagent_type="gsd-debugger",
   description="Debug: {truth_short}"
 )
 ```
@@ -213,7 +213,7 @@ Agents only diagnose—plan-phase --gaps handles fixes (no fix application).
 
 **Agent times out:**
 - Check DEBUG-{slug}.md for partial progress
-- Can resume with /gsd:debug
+- Can resume with /gsd-debug
 
 **All agents fail:**
 - Something systemic (permissions, git, etc.)

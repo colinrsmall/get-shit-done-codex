@@ -2,7 +2,7 @@
 
 Template for `.planning/phases/XX-name/{phase}-RESEARCH.md` - comprehensive ecosystem research before planning.
 
-**Purpose:** Document what Claude needs to know to implement a phase well - not just "which library" but "how do experts build this."
+**Purpose:** Document what the assistant needs to know to implement a phase well - not just "which library" but "how do experts build this."
 
 ---
 
@@ -189,10 +189,10 @@ Things that couldn't be fully resolved:
 - [Official docs URL] - [what was checked]
 
 ### Secondary (MEDIUM confidence)
-- [WebSearch verified with official source] - [finding + verification]
+- [WebFetch verified with official source] - [finding + verification]
 
 ### Tertiary (LOW confidence - needs validation)
-- [WebSearch only] - [finding, marked for validation during implementation]
+- [WebFetch only] - [finding, marked for validation during implementation]
 </sources>
 
 <metadata>
@@ -501,7 +501,7 @@ function useVehicleControls(rigidBodyRef) {
 
 **When to create:**
 - Before planning phases in niche/complex domains
-- When Claude's training data is likely stale or sparse
+- When the model's training data is likely stale or sparse
 - When "how do experts do this" matters more than "which library"
 
 **Structure:**

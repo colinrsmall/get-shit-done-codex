@@ -1,12 +1,11 @@
 ---
-name: gsd:debug
 description: Systematic debugging with persistent state across context resets
 argument-hint: [issue description]
-allowed-tools:
-  - Read
-  - Bash
-  - Task
-  - AskUserQuestion
+tools:
+  read: true
+  bash: true
+  task: true
+  question: true
 ---
 
 <objective>
@@ -14,7 +13,7 @@ Debug issues using scientific method with subagent isolation.
 
 **Orchestrator role:** Gather symptoms, spawn gsd-debugger agent, handle checkpoints, spawn continuations.
 
-**Why subagent:** Investigation burns context fast (reading files, forming hypotheses, testing). Fresh 200k context per investigation. Main context stays lean for user interaction.
+**Why subagent:** Investigation burns context fast (reading files, forming hypotheses, testing). Fresh context window per investigation. Main context stays lean for user interaction.
 </objective>
 
 <context>
@@ -28,21 +27,13 @@ ls .planning/debug/*.md 2>/dev/null | grep -v resolved | head -5
 
 <process>
 
-## 0. Resolve Model Profile
+## 0. Resolve Models
 
-Read model profile for agent spawning:
+Read explicit model for agent spawning:
 
 ```bash
-MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "balanced")
+debugger_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-debugger"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-codex-high")
 ```
-
-Default to "balanced" if not set.
-
-**Model lookup table:**
-
-| Agent | quality | balanced | budget |
-|-------|---------|----------|--------|
-| gsd-debugger | opus | sonnet | sonnet |
 
 Store resolved model for use in Task calls below.
 
@@ -57,7 +48,7 @@ If $ARGUMENTS provided OR user describes new issue:
 
 ## 2. Gather Symptoms (if new issue)
 
-Use AskUserQuestion for each:
+Use question for each:
 
 1. **Expected behavior** - What should happen?
 2. **Actual behavior** - What happens instead?
@@ -111,7 +102,7 @@ Task(
 - Display root cause and evidence summary
 - Offer options:
   - "Fix now" - spawn fix subagent
-  - "Plan fix" - suggest /gsd:plan-phase --gaps
+  - "Plan fix" - suggest /gsd-plan-phase --gaps
   - "Manual fix" - done
 
 **If `## CHECKPOINT REACHED`:**

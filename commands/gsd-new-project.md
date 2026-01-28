@@ -1,12 +1,11 @@
 ---
-name: gsd:new-project
 description: Initialize a new project with deep context gathering and PROJECT.md
-allowed-tools:
-  - Read
-  - Bash
-  - Write
-  - Task
-  - AskUserQuestion
+tools:
+  read: true
+  bash: true
+  write: true
+  task: true
+  question: true
 ---
 
 <objective>
@@ -23,16 +22,16 @@ This is the most leveraged moment in any project. Deep questioning here means be
 - `.planning/ROADMAP.md` — phase structure
 - `.planning/STATE.md` — project memory
 
-**After this command:** Run `/gsd:plan-phase 1` to start execution.
+**After this command:** Run `/gsd-plan-phase 1` to start execution.
 
 </objective>
 
 <execution_context>
 
-@~/.claude/get-shit-done/references/questioning.md
-@~/.claude/get-shit-done/references/ui-brand.md
-@~/.claude/get-shit-done/templates/project.md
-@~/.claude/get-shit-done/templates/requirements.md
+@~/.config/opencode/get-shit-done/references/questioning.md
+@~/.config/opencode/get-shit-done/references/ui-brand.md
+@~/.config/opencode/get-shit-done/templates/project.md
+@~/.config/opencode/get-shit-done/templates/requirements.md
 
 </execution_context>
 
@@ -44,7 +43,7 @@ This is the most leveraged moment in any project. Deep questioning here means be
 
 1. **Abort if project exists:**
    ```bash
-   [ -f .planning/PROJECT.md ] && echo "ERROR: Project already initialized. Use /gsd:progress" && exit 1
+   [ -f .planning/PROJECT.md ] && echo "ERROR: Project already initialized. Use /gsd-progress" && exit 1
    ```
 
 2. **Initialize git repo in THIS directory** (required even if inside a parent repo):
@@ -74,16 +73,16 @@ Check the results from setup step:
 - If `CODE_FILES` is non-empty OR `HAS_PACKAGE` is "yes"
 - AND `HAS_CODEBASE_MAP` is NOT "yes"
 
-Use AskUserQuestion:
+Use question:
 - header: "Existing Code"
 - question: "I detected existing code in this directory. Would you like to map the codebase first?"
 - options:
-  - "Map codebase first" — Run /gsd:map-codebase to understand existing architecture (Recommended)
+  - "Map codebase first" — Run /gsd-map-codebase to understand existing architecture (Recommended)
   - "Skip mapping" — Proceed with project initialization
 
 **If "Map codebase first":**
 ```
-Run `/gsd:map-codebase` first, then return to `/gsd:new-project`
+Run `/gsd-map-codebase` first, then return to `/gsd-new-project`
 ```
 Exit command.
 
@@ -103,7 +102,7 @@ Exit command.
 
 **Open the conversation:**
 
-Ask inline (freeform, NOT AskUserQuestion):
+Ask inline (freeform, NOT question):
 
 "What do you want to build?"
 
@@ -111,7 +110,7 @@ Wait for their response. This gives you the context needed to ask intelligent fo
 
 **Follow the thread:**
 
-Based on what they said, ask follow-up questions that dig into their response. Use AskUserQuestion with options that probe what they mentioned — interpretations, clarifications, concrete examples.
+Based on what they said, ask follow-up questions that dig into their response. Use question with options that probe what they mentioned — interpretations, clarifications, concrete examples.
 
 Keep following threads. Each answer opens new threads to explore. Ask about:
 - What excited them
@@ -133,7 +132,7 @@ As you go, mentally check the context checklist from `questioning.md`. If gaps r
 
 **Decision gate:**
 
-When you could write a clear PROJECT.md, use AskUserQuestion:
+When you could write a clear PROJECT.md, use question:
 
 - header: "Ready?"
 - question: "I think I understand what you're after. Ready to create PROJECT.md?"
@@ -322,16 +321,7 @@ questions: [
       { label: "No", description: "Trust execution, skip verification" }
     ]
   },
-  {
-    header: "Model Profile",
-    question: "Which AI models for planning agents?",
-    multiSelect: false,
-    options: [
-      { label: "Balanced (Recommended)", description: "Sonnet for most agents — good quality/cost ratio" },
-      { label: "Quality", description: "Opus for research/roadmap — higher cost, deeper analysis" },
-      { label: "Budget", description: "Haiku where possible — fastest, lowest cost" }
-    ]
-  }
+  
 ]
 ```
 
@@ -341,22 +331,58 @@ Create `.planning/config.json` with all settings:
 {
   "mode": "yolo|interactive",
   "depth": "quick|standard|comprehensive",
-  "parallelization": true|false,
-  "commit_docs": true|false,
-  "model_profile": "quality|balanced|budget",
   "workflow": {
     "research": true|false,
     "plan_check": true|false,
     "verifier": true|false
+  },
+  "planning": {
+    "commit_docs": true|false,
+    "search_gitignored": false
+  },
+  "models": {
+    "gsd-planner": "openai/gpt-5.2-high",
+    "gsd-roadmapper": "openai/gpt-5.2-high",
+    "gsd-phase-researcher": "openai/gpt-5.2-high",
+    "gsd-project-researcher": "openai/gpt-5.2-high",
+    "gsd-research-synthesizer": "openai/gpt-5.2-high",
+    "gsd-plan-checker": "openai/gpt-5.2-high",
+    "gsd-verifier": "openai/gpt-5.2-high",
+    "gsd-integration-checker": "openai/gpt-5.2-high",
+    "gsd-codebase-mapper": "openai/gpt-5.2-high",
+    "gsd-executor": "openai/gpt-5.2-codex-high",
+    "gsd-debugger": "openai/gpt-5.2-codex-high"
+  },
+  "parallelization": {
+    "enabled": true|false,
+    "plan_level": true,
+    "task_level": false,
+    "skip_checkpoints": true,
+    "max_concurrent_agents": 3,
+    "min_plans_for_parallel": 2
+  },
+  "gates": {
+    "confirm_project": true,
+    "confirm_phases": true,
+    "confirm_roadmap": true,
+    "confirm_breakdown": true,
+    "confirm_plan": true,
+    "execute_next_plan": true,
+    "issues_review": true,
+    "confirm_transition": true
+  },
+  "safety": {
+    "always_confirm_destructive": true,
+    "always_confirm_external_services": true
   }
 }
 ```
 
-**If commit_docs = No:**
-- Set `commit_docs: false` in config.json
+**If planning.commit_docs = No:**
+- Set `planning.commit_docs: false` in config.json
 - Add `.planning/` to `.gitignore` (create if needed)
 
-**If commit_docs = Yes:**
+**If planning.commit_docs = Yes:**
 - No additional gitignore entries needed
 
 **Commit config.json:**
@@ -374,31 +400,23 @@ EOF
 )"
 ```
 
-**Note:** Run `/gsd:settings` anytime to update these preferences.
+**Note:** Run `/gsd-settings` anytime to update these preferences.
 
-## Phase 5.5: Resolve Model Profile
+## Phase 5.5: Resolve Models
 
-Read model profile for agent spawning:
+Read explicit per-agent models for spawning:
 
 ```bash
-MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "balanced")
+researcher_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-project-researcher"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-high")
+synthesizer_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-research-synthesizer"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-high")
+roadmapper_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-roadmapper"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-high")
 ```
-
-Default to "balanced" if not set.
-
-**Model lookup table:**
-
-| Agent | quality | balanced | budget |
-|-------|---------|----------|--------|
-| gsd-project-researcher | opus | sonnet | haiku |
-| gsd-research-synthesizer | sonnet | sonnet | haiku |
-| gsd-roadmapper | opus | sonnet | sonnet |
 
 Store resolved models for use in Task calls below.
 
 ## Phase 6: Research Decision
 
-Use AskUserQuestion:
+Use question:
 - header: "Research"
 - question: "Research the domain ecosystem before defining requirements?"
 - options:
@@ -439,8 +457,7 @@ Display spawning indicator:
 Spawn 4 parallel gsd-project-researcher agents with rich context:
 
 ```
-Task(prompt="First, read ~/.claude/agents/gsd-project-researcher.md for your role and instructions.
-
+Task(prompt="
 <research_type>
 Project Research — Stack dimension for [domain].
 </research_type>
@@ -475,12 +492,11 @@ Your STACK.md feeds into roadmap creation. Be prescriptive:
 
 <output>
 Write to: .planning/research/STACK.md
-Use template: ~/.claude/get-shit-done/templates/research-project/STACK.md
+Use template: ~/.config/opencode/get-shit-done/templates/research-project/STACK.md
 </output>
-", subagent_type="general-purpose", model="{researcher_model}", description="Stack research")
+", subagent_type="gsd-project-researcher", model="{researcher_model}", description="Stack research")
 
-Task(prompt="First, read ~/.claude/agents/gsd-project-researcher.md for your role and instructions.
-
+Task(prompt="
 <research_type>
 Project Research — Features dimension for [domain].
 </research_type>
@@ -515,12 +531,11 @@ Your FEATURES.md feeds into requirements definition. Categorize clearly:
 
 <output>
 Write to: .planning/research/FEATURES.md
-Use template: ~/.claude/get-shit-done/templates/research-project/FEATURES.md
+Use template: ~/.config/opencode/get-shit-done/templates/research-project/FEATURES.md
 </output>
-", subagent_type="general-purpose", model="{researcher_model}", description="Features research")
+", subagent_type="gsd-project-researcher", model="{researcher_model}", description="Features research")
 
-Task(prompt="First, read ~/.claude/agents/gsd-project-researcher.md for your role and instructions.
-
+Task(prompt="
 <research_type>
 Project Research — Architecture dimension for [domain].
 </research_type>
@@ -555,12 +570,11 @@ Your ARCHITECTURE.md informs phase structure in roadmap. Include:
 
 <output>
 Write to: .planning/research/ARCHITECTURE.md
-Use template: ~/.claude/get-shit-done/templates/research-project/ARCHITECTURE.md
+Use template: ~/.config/opencode/get-shit-done/templates/research-project/ARCHITECTURE.md
 </output>
-", subagent_type="general-purpose", model="{researcher_model}", description="Architecture research")
+", subagent_type="gsd-project-researcher", model="{researcher_model}", description="Architecture research")
 
-Task(prompt="First, read ~/.claude/agents/gsd-project-researcher.md for your role and instructions.
-
+Task(prompt="
 <research_type>
 Project Research — Pitfalls dimension for [domain].
 </research_type>
@@ -595,9 +609,9 @@ Your PITFALLS.md prevents mistakes in roadmap/planning. For each pitfall:
 
 <output>
 Write to: .planning/research/PITFALLS.md
-Use template: ~/.claude/get-shit-done/templates/research-project/PITFALLS.md
+Use template: ~/.config/opencode/get-shit-done/templates/research-project/PITFALLS.md
 </output>
-", subagent_type="general-purpose", model="{researcher_model}", description="Pitfalls research")
+", subagent_type="gsd-project-researcher", model="{researcher_model}", description="Pitfalls research")
 ```
 
 After all 4 agents complete, spawn synthesizer to create SUMMARY.md:
@@ -618,7 +632,7 @@ Read these files:
 
 <output>
 Write to: .planning/research/SUMMARY.md
-Use template: ~/.claude/get-shit-done/templates/research-project/SUMMARY.md
+Use template: ~/.config/opencode/get-shit-done/templates/research-project/SUMMARY.md
 Commit after writing.
 </output>
 ", subagent_type="gsd-research-synthesizer", model="{synthesizer_model}", description="Synthesize research")
@@ -695,7 +709,7 @@ For each capability mentioned:
 
 **Scope each category:**
 
-For each category, use AskUserQuestion:
+For each category, use question:
 
 - header: "[Category name]"
 - question: "Which [category] features are in v1?"
@@ -713,7 +727,7 @@ Track responses:
 
 **Identify gaps:**
 
-Use AskUserQuestion:
+Use question:
 - header: "Additions"
 - question: "Any requirements research missed? (Features specific to your vision)"
 - options:
@@ -878,7 +892,7 @@ Success criteria:
 
 **CRITICAL: Ask for approval before committing:**
 
-Use AskUserQuestion:
+Use question:
 - header: "Roadmap"
 - question: "Does this roadmap structure work for you?"
 - options:
@@ -953,14 +967,14 @@ Present completion with next steps:
 
 **Phase 1: [Phase Name]** — [Goal from ROADMAP.md]
 
-/gsd:discuss-phase 1 — gather context and clarify approach
+/gsd-discuss-phase 1 — gather context and clarify approach
 
 <sub>/clear first → fresh context window</sub>
 
 ---
 
 **Also available:**
-- /gsd:plan-phase 1 — skip discussion, plan directly
+- /gsd-plan-phase 1 — skip discussion, plan directly
 
 ───────────────────────────────────────────────────────────────
 ```
@@ -1001,7 +1015,7 @@ Present completion with next steps:
 - [ ] ROADMAP.md created with phases, requirement mappings, success criteria
 - [ ] STATE.md initialized
 - [ ] REQUIREMENTS.md traceability updated
-- [ ] User knows next step is `/gsd:discuss-phase 1`
+- [ ] User knows next step is `/gsd-discuss-phase 1`
 
 **Atomic commits:** Each phase commits its artifacts immediately. If context is lost, artifacts persist.
 

@@ -17,25 +17,17 @@ Output: .planning/codebase/ folder with 7 structured documents about the codebas
 Include enough detail to be useful as reference. Prioritize practical examples (especially code patterns) over arbitrary brevity.
 
 **Always include file paths:**
-Documents are reference material for Claude when planning/executing. Always include actual file paths formatted with backticks: `src/services/user.ts`.
+Documents are reference material for the assistant when planning/executing. Always include actual file paths formatted with backticks: `src/services/user.ts`.
 </philosophy>
 
 <process>
 
-<step name="resolve_model_profile" priority="first">
-Read model profile for agent spawning:
+<step name="resolve_models" priority="first">
+Read explicit model for agent spawning:
 
 ```bash
-MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "balanced")
+mapper_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-codebase-mapper"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-high")
 ```
-
-Default to "balanced" if not set.
-
-**Model lookup table:**
-
-| Agent | quality | balanced | budget |
-|-------|---------|----------|--------|
-| gsd-codebase-mapper | sonnet | haiku | haiku |
 
 Store resolved model for use in Task calls below.
 </step>
@@ -292,14 +284,14 @@ Created .planning/codebase/:
 
 **Initialize project** — use codebase context for planning
 
-`/gsd:new-project`
+`/gsd-new-project`
 
 <sub>`/clear` first → fresh context window</sub>
 
 ---
 
 **Also available:**
-- Re-run mapping: `/gsd:map-codebase`
+- Re-run mapping: `/gsd-map-codebase`
 - Review specific file: `cat .planning/codebase/STACK.md`
 - Edit any document before proceeding
 

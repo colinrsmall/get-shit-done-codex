@@ -1,10 +1,9 @@
 ---
-name: gsd:pause-work
 description: Create context handoff when pausing work mid-phase
-allowed-tools:
-  - Read
-  - Write
-  - Bash
+tools:
+  read: true
+  write: true
+  bash: true
 ---
 
 <objective>
@@ -86,7 +85,7 @@ Start with: [specific first action when resuming]
 </next_action>
 ```
 
-Be specific enough for a fresh Claude to understand immediately.
+Be specific enough for a fresh assistant to understand immediately.
 </step>
 
 <step name="commit">
@@ -118,7 +117,7 @@ Current state:
 - Status: [in_progress/blocked]
 - Committed as WIP
 
-To resume: /gsd:resume-work
+To resume: /gsd-resume-work
 
 ```
 </step>

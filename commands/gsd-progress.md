@@ -1,12 +1,11 @@
 ---
-name: gsd:progress
 description: Check project progress, show context, and route to next action (execute or plan)
-allowed-tools:
-  - Read
-  - Bash
-  - Grep
-  - Glob
-  - SlashCommand
+tools:
+  read: true
+  bash: true
+  grep: true
+  glob: true
+  skill: true
 ---
 
 <objective>
@@ -32,18 +31,18 @@ If no `.planning/` directory:
 ```
 No planning structure found.
 
-Run /gsd:new-project to start a new project.
+Run /gsd-new-project to start a new project.
 ```
 
 Exit.
 
-If missing STATE.md: suggest `/gsd:new-project`.
+If missing STATE.md: suggest `/gsd-new-project`.
 
 **If ROADMAP.md missing but PROJECT.md exists:**
 
 This means a milestone was completed and archived. Go to **Route F** (between milestones).
 
-If missing both ROADMAP.md and PROJECT.md: suggest `/gsd:new-project`.
+If missing both ROADMAP.md and PROJECT.md: suggest `/gsd-new-project`.
 </step>
 
 <step name="load">
@@ -52,7 +51,7 @@ If missing both ROADMAP.md and PROJECT.md: suggest `/gsd:new-project`.
 - Read `.planning/STATE.md` for living memory (position, decisions, issues)
 - Read `.planning/ROADMAP.md` for phase structure and objectives
 - Read `.planning/PROJECT.md` for current state (What This Is, Core Value, Requirements)
-- Read `.planning/config.json` for settings (model_profile, workflow toggles)
+- Read `.planning/config.json` for settings (workflow toggles, models)
   </step>
 
 <step name="recent">
@@ -81,7 +80,7 @@ If missing both ROADMAP.md and PROJECT.md: suggest `/gsd:new-project`.
 # [Project Name]
 
 **Progress:** [████████░░] 8/10 plans complete
-**Profile:** [quality/balanced/budget]
+**Models:** planner=[model], executor=[model]
 
 ## Recent Work
 - [Phase X, Plan Y]: [what was accomplished - 1 line]
@@ -100,10 +99,10 @@ CONTEXT: [✓ if CONTEXT.md exists | - if not]
 - [any blockers or concerns from STATE.md]
 
 ## Pending Todos
-- [count] pending — /gsd:check-todos to review
+- [count] pending — /gsd-check-todos to review
 
 ## Active Debug Sessions
-- [count] active — /gsd:debug to continue
+- [count] active — /gsd-debug to continue
 (Only show this section if count > 0)
 
 ## What's Next
@@ -162,7 +161,7 @@ Read its `<objective>` section.
 
 **{phase}-{plan}: [Plan Name]** — [objective summary from PLAN.md]
 
-`/gsd:execute-phase {phase}`
+`/gsd-execute-phase {phase}`
 
 <sub>`/clear` first → fresh context window</sub>
 
@@ -185,7 +184,7 @@ Check if `{phase}-CONTEXT.md` exists in phase directory.
 **Phase {N}: {Name}** — {Goal from ROADMAP.md}
 <sub>✓ Context gathered, ready to plan</sub>
 
-`/gsd:plan-phase {phase-number}`
+`/gsd-plan-phase {phase-number}`
 
 <sub>`/clear` first → fresh context window</sub>
 
@@ -201,15 +200,15 @@ Check if `{phase}-CONTEXT.md` exists in phase directory.
 
 **Phase {N}: {Name}** — {Goal from ROADMAP.md}
 
-`/gsd:discuss-phase {phase}` — gather context and clarify approach
+`/gsd-discuss-phase {phase}` — gather context and clarify approach
 
 <sub>`/clear` first → fresh context window</sub>
 
 ---
 
 **Also available:**
-- `/gsd:plan-phase {phase}` — skip discussion, plan directly
-- `/gsd:list-phase-assumptions {phase}` — see Claude's assumptions
+- `/gsd-plan-phase {phase}` — skip discussion, plan directly
+- `/gsd-list-phase-assumptions {phase}` — see the assistant's assumptions
 
 ---
 ```
@@ -227,15 +226,15 @@ UAT.md exists with gaps (diagnosed issues). User needs to plan fixes.
 
 **{phase}-UAT.md** has {N} gaps requiring fixes.
 
-`/gsd:plan-phase {phase} --gaps`
+`/gsd-plan-phase {phase} --gaps`
 
 <sub>`/clear` first → fresh context window</sub>
 
 ---
 
 **Also available:**
-- `/gsd:execute-phase {phase}` — execute phase plans
-- `/gsd:verify-work {phase}` — run more UAT testing
+- `/gsd-execute-phase {phase}` — execute phase plans
+- `/gsd-verify-work {phase}` — run more UAT testing
 
 ---
 ```
@@ -274,15 +273,15 @@ Read ROADMAP.md to get the next phase's name and goal.
 
 **Phase {Z+1}: {Name}** — {Goal from ROADMAP.md}
 
-`/gsd:discuss-phase {Z+1}` — gather context and clarify approach
+`/gsd-discuss-phase {Z+1}` — gather context and clarify approach
 
 <sub>`/clear` first → fresh context window</sub>
 
 ---
 
 **Also available:**
-- `/gsd:plan-phase {Z+1}` — skip discussion, plan directly
-- `/gsd:verify-work {Z}` — user acceptance test before continuing
+- `/gsd-plan-phase {Z+1}` — skip discussion, plan directly
+- `/gsd-verify-work {Z}` — user acceptance test before continuing
 
 ---
 ```
@@ -302,14 +301,14 @@ All {N} phases finished!
 
 **Complete Milestone** — archive and prepare for next
 
-`/gsd:complete-milestone`
+`/gsd-complete-milestone`
 
 <sub>`/clear` first → fresh context window</sub>
 
 ---
 
 **Also available:**
-- `/gsd:verify-work` — user acceptance test before completing milestone
+- `/gsd-verify-work` — user acceptance test before completing milestone
 
 ---
 ```
@@ -333,7 +332,7 @@ Ready to plan the next milestone.
 
 **Start Next Milestone** — questioning → research → requirements → roadmap
 
-`/gsd:new-milestone`
+`/gsd-new-milestone`
 
 <sub>`/clear` first → fresh context window</sub>
 
@@ -345,10 +344,10 @@ Ready to plan the next milestone.
 <step name="edge_cases">
 **Handle edge cases:**
 
-- Phase complete but next phase not planned → offer `/gsd:plan-phase [next]`
+- Phase complete but next phase not planned → offer `/gsd-plan-phase [next]`
 - All work complete → offer milestone completion
 - Blockers present → highlight before offering to continue
-- Handoff file exists → mention it, offer `/gsd:resume-work`
+- Handoff file exists → mention it, offer `/gsd-resume-work`
   </step>
 
 </process>
@@ -358,7 +357,7 @@ Ready to plan the next milestone.
 - [ ] Rich context provided (recent work, decisions, issues)
 - [ ] Current position clear with visual progress
 - [ ] What's next clearly explained
-- [ ] Smart routing: /gsd:execute-phase if plans exist, /gsd:plan-phase if not
+- [ ] Smart routing: /gsd-execute-phase if plans exist, /gsd-plan-phase if not
 - [ ] User confirms before any action
 - [ ] Seamless handoff to appropriate gsd command
       </success_criteria>

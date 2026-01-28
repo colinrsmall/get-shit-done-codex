@@ -12,18 +12,18 @@ Configuration options for `.planning/` directory behavior.
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `commit_docs` | `true` | Whether to commit planning artifacts to git |
-| `search_gitignored` | `false` | Add `--no-ignore` to broad rg searches |
+| `planning.commit_docs` | `true` | Whether to commit planning artifacts to git |
+| `planning.search_gitignored` | `false` | Add `--no-ignore` to broad rg searches |
 </config_schema>
 
 <commit_docs_behavior>
 
-**When `commit_docs: true` (default):**
+**When `planning.commit_docs: true` (default):**
 - Planning files committed normally
 - SUMMARY.md, STATE.md, ROADMAP.md tracked in git
 - Full history of planning decisions preserved
 
-**When `commit_docs: false`:**
+**When `planning.commit_docs: false`:**
 - Skip all `git add`/`git commit` for `.planning/` files
 - User must add `.planning/` to `.gitignore`
 - Useful for: OSS contributions, client projects, keeping planning private
@@ -38,7 +38,9 @@ COMMIT_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:s
 git check-ignore -q .planning 2>/dev/null && COMMIT_DOCS=false
 ```
 
-**Auto-detection:** If `.planning/` is gitignored, `commit_docs` is automatically `false` regardless of config.json. This prevents git errors when users have `.planning/` in `.gitignore`.
+**Auto-detection:** If `.planning/` is gitignored, `planning.commit_docs` is automatically `false` regardless of config.json. This prevents git errors when users have `.planning/` in `.gitignore`.
+
+**Backward compatibility:** A legacy top-level `commit_docs` is still honored, but `planning.commit_docs` is canonical.
 
 **Conditional git operations:**
 

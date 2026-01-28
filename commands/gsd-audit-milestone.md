@@ -1,14 +1,13 @@
 ---
-name: gsd:audit-milestone
 description: Audit milestone completion against original intent before archiving
 argument-hint: "[version]"
-allowed-tools:
-  - Read
-  - Glob
-  - Grep
-  - Bash
-  - Task
-  - Write
+tools:
+  read: true
+  glob: true
+  grep: true
+  bash: true
+  task: true
+  write: true
 ---
 
 <objective>
@@ -39,21 +38,13 @@ Glob: .planning/phases/*/*-VERIFICATION.md
 
 <process>
 
-## 0. Resolve Model Profile
+## 0. Resolve Models
 
-Read model profile for agent spawning:
+Read explicit model for agent spawning:
 
 ```bash
-MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "balanced")
+integration_checker_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-integration-checker"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-high")
 ```
-
-Default to "balanced" if not set.
-
-**Model lookup table:**
-
-| Agent | quality | balanced | budget |
-|-------|---------|----------|--------|
-| gsd-integration-checker | sonnet | sonnet | haiku |
 
 Store resolved model for use in Task call below.
 
@@ -181,7 +172,7 @@ All requirements covered. Cross-phase integration verified. E2E flows complete.
 
 **Complete milestone** — archive and tag
 
-/gsd:complete-milestone {version}
+/gsd-complete-milestone {version}
 
 <sub>/clear first → fresh context window</sub>
 
@@ -218,7 +209,7 @@ All requirements covered. Cross-phase integration verified. E2E flows complete.
 
 **Plan gap closure** — create phases to complete milestone
 
-/gsd:plan-milestone-gaps
+/gsd-plan-milestone-gaps
 
 <sub>/clear first → fresh context window</sub>
 
@@ -226,7 +217,7 @@ All requirements covered. Cross-phase integration verified. E2E flows complete.
 
 **Also available:**
 - cat .planning/v{version}-MILESTONE-AUDIT.md — see full report
-- /gsd:complete-milestone {version} — proceed anyway (accept tech debt)
+- /gsd-complete-milestone {version} — proceed anyway (accept tech debt)
 
 ───────────────────────────────────────────────────────────────
 
@@ -256,11 +247,11 @@ All requirements met. No critical blockers. Accumulated tech debt needs review.
 
 **A. Complete milestone** — accept debt, track in backlog
 
-/gsd:complete-milestone {version}
+/gsd-complete-milestone {version}
 
 **B. Plan cleanup phase** — address debt before completing
 
-/gsd:plan-milestone-gaps
+/gsd-plan-milestone-gaps
 
 <sub>/clear first → fresh context window</sub>
 

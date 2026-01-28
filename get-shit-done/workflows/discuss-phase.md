@@ -13,7 +13,7 @@ You are a thinking partner, not an interviewer. The user is the visionary — yo
 
 2. **gsd-planner** — Reads CONTEXT.md to know WHAT decisions are locked
    - "Pull-to-refresh on mobile" → planner includes that in task specs
-   - "Claude's Discretion: loading skeleton" → planner can decide approach
+   - "Assistant Discretion: loading skeleton" → planner can decide approach
 
 **Your job:** Capture decisions clearly enough that downstream agents can act on them without asking the user again.
 
@@ -21,7 +21,7 @@ You are a thinking partner, not an interviewer. The user is the visionary — yo
 </downstream_awareness>
 
 <philosophy>
-**User = founder/visionary. Claude = builder.**
+**User = founder/visionary. Assistant = builder.**
 
 The user knows:
 - How they imagine it working
@@ -98,7 +98,7 @@ Phase: "API documentation"
 
 **The key question:** What decisions would change the outcome that the user should weigh in on?
 
-**Claude handles these (don't ask):**
+**Assistant handles these (don't ask):**
 - Technical implementation details
 - Architecture patterns
 - Performance optimization
@@ -119,7 +119,7 @@ Load and validate:
 ```
 Phase [X] not found in roadmap.
 
-Use /gsd:progress to see available phases.
+Use /gsd-progress to see available phases.
 ```
 Exit workflow.
 
@@ -136,7 +136,7 @@ ls .planning/phases/${PADDED_PHASE}-*/*-CONTEXT.md .planning/phases/${PHASE}-*/*
 ```
 
 **If exists:**
-Use AskUserQuestion:
+Use question:
 - header: "Existing context"
 - question: "Phase [X] already has context. What do you want to do?"
 - options:
@@ -188,7 +188,7 @@ We'll clarify HOW to implement this.
 (New capabilities belong in other phases.)
 ```
 
-**Then use AskUserQuestion (multiSelect: true):**
+**Then use question (multiple: true):**
 - header: "Discuss"
 - question: "Which areas do you want to discuss for [phase name]?"
 - options: Generate 3-4 phase-specific gray areas, each formatted as:
@@ -240,11 +240,11 @@ Ask 4 questions per area before offering to continue or move on. Each answer oft
    Let's talk about [Area].
    ```
 
-2. **Ask 4 questions using AskUserQuestion:**
+2. **Ask 4 questions using question:**
    - header: "[Area]"
    - question: Specific decision for this area
-   - options: 2-3 concrete choices (AskUserQuestion adds "Other" automatically)
-   - Include "You decide" as an option when reasonable — captures Claude discretion
+   - options: 2-3 concrete choices (question adds a "Type your own answer" option automatically)
+   - Include "You decide" as an option when reasonable — captures assistant discretion
 
 3. **After 4 questions, check:**
    - header: "[Area]"
@@ -320,8 +320,8 @@ fi
 ### [Category 2 that was discussed]
 - [Decision or preference captured]
 
-### Claude's Discretion
-[Areas where user said "you decide" — note that Claude has flexibility here]
+### Assistant Discretion
+[Areas where user said "you decide" — note that the assistant has flexibility here]
 
 </decisions>
 
@@ -376,14 +376,14 @@ Created: .planning/phases/${PADDED_PHASE}-${SLUG}/${PADDED_PHASE}-CONTEXT.md
 
 **Phase ${PHASE}: [Name]** — [Goal from ROADMAP.md]
 
-`/gsd:plan-phase ${PHASE}`
+`/gsd-plan-phase ${PHASE}`
 
 <sub>`/clear` first → fresh context window</sub>
 
 ---
 
 **Also available:**
-- `/gsd:plan-phase ${PHASE} --skip-research` — plan without research
+- `/gsd-plan-phase ${PHASE} --skip-research` — plan without research
 - Review/edit CONTEXT.md before continuing
 
 ---

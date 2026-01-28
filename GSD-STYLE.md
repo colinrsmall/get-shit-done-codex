@@ -1,29 +1,34 @@
 # GSD-STYLE.md
 
-> **Comprehensive reference.** Core rules auto-load from `.claude/rules/`. This document provides deep explanations and examples for when you need the full picture.
+> **Comprehensive reference.** This document provides deep explanations and examples for when you need the full picture.
 
-This document explains how GSD is written so future Claude instances can contribute consistently.
+This document explains how GSD is written so future assistant instances can contribute consistently.
 
 ## Core Philosophy
 
-GSD is a **meta-prompting system** where every file is both implementation and specification. Files teach Claude how to build software systematically. The system optimizes for:
+GSD is a **meta-prompting system** where every file is both implementation and specification. Files teach the assistant how to build software systematically. The system optimizes for:
 
-- **Solo developer + Claude workflow** (no enterprise patterns)
-- **Context engineering** (manage Claude's context window deliberately)
+- **Solo developer + assistant workflow** (no enterprise patterns)
+- **Context engineering** (manage the assistant's context window deliberately)
 - **Plans as prompts** (PLAN.md files are executable, not documents to transform)
 
 ---
 
 ## File Structure Conventions
 
-### Slash Commands (`commands/gsd/*.md`)
+### Slash Commands (`commands/gsd-*.md`)
 
 ```yaml
 ---
-name: gsd:command-name
 description: One-line description
 argument-hint: "<required>" or "[optional]"
-allowed-tools: [Read, Write, Bash, Glob, Grep, AskUserQuestion]
+tools:
+  read: true
+  write: true
+  bash: true
+  glob: true
+  grep: true
+  question: true
 ---
 ```
 
@@ -119,7 +124,7 @@ Build authentication system
 ```
 
 **Task types:**
-- `type="auto"` — Claude executes autonomously
+- `type="auto"` — assistant executes autonomously
 - `type="checkpoint:human-verify"` — User must verify
 - `type="checkpoint:decision"` — User must choose
 
@@ -164,7 +169,7 @@ Build authentication system
 
 **Static references** (always load):
 ```
-@~/.claude/get-shit-done/workflows/execute-phase.md
+@~/.config/opencode/get-shit-done/workflows/execute-phase.md
 @.planning/PROJECT.md
 ```
 
@@ -173,7 +178,7 @@ Build authentication system
 @.planning/DISCOVERY.md (if exists)
 ```
 
-**@-references are lazy loading signals.** They tell Claude what to read, not pre-loaded content.
+**@-references are lazy loading signals.** They tell the assistant what to read, not pre-loaded content.
 
 ---
 
@@ -182,7 +187,7 @@ Build authentication system
 | Type | Convention | Example |
 |------|------------|---------|
 | Files | kebab-case | `execute-phase.md` |
-| Commands | `gsd:kebab-case` | `gsd:execute-phase` |
+| Commands | `/gsd-kebab-case` | `/gsd-execute-phase` |
 | XML tags | kebab-case | `<execution_context>` |
 | Step names | snake_case | `name="load_project_state"` |
 | Bash variables | CAPS_UNDERSCORES | `PHASE_ARG`, `PLAN_START_TIME` |
@@ -341,7 +346,7 @@ Orchestrators @-reference ui-brand.md for stage banners, checkpoint boxes, statu
 
 ### Decision Gates
 
-Always use AskUserQuestion with concrete options. Never plain text prompts.
+Prefer the question tool with concrete options. Avoid vague freeform prompts when choices are possible.
 
 Include escape hatch: "Something else", "Let me describe"
 
@@ -439,7 +444,7 @@ docs(quick-NNN): description
 
 Quick task completed.
 
-Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
+Co-Authored-By: Assistant <noreply@example.com>
 ```
 
 ---
@@ -490,12 +495,12 @@ How to make tests pass
 3. **Commands delegate to workflows**
 4. **Progressive disclosure hierarchy**
 5. **Imperative, brief, technical** — no filler, no sycophancy
-6. **Solo developer + Claude** — no enterprise patterns
+6. **Solo developer + assistant** — no enterprise patterns
 7. **Context size as quality constraint** — split aggressively
 8. **Temporal language banned** — current state only
 9. **Plans ARE prompts** — executable, not documents
 10. **Atomic commits** — Git history as context source
-11. **AskUserQuestion for all exploration** — always options
+11. **question tool for exploration** — always options
 12. **Checkpoints post-automation** — automate first, verify after
 13. **Deviation rules are automatic** — no permission for bugs/critical
 14. **Depth controls compression** — derive from actual work

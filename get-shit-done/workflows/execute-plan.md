@@ -6,25 +6,17 @@ Execute a phase prompt (PLAN.md) and create the outcome summary (SUMMARY.md).
 Read STATE.md before any operation to load project context.
 Read config.json for planning behavior settings.
 
-@~/.claude/get-shit-done/references/git-integration.md
+@~/.config/opencode/get-shit-done/references/git-integration.md
 </required_reading>
 
 <process>
 
-<step name="resolve_model_profile" priority="first">
-Read model profile for agent spawning:
+<step name="resolve_models" priority="first">
+Read explicit per-agent models for spawning:
 
 ```bash
-MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "balanced")
+executor_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-executor"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-codex-high")
 ```
-
-Default to "balanced" if not set.
-
-**Model lookup table:**
-
-| Agent | quality | balanced | budget |
-|-------|---------|----------|--------|
-| gsd-executor | opus | sonnet | sonnet |
 
 Store resolved model for use in Task calls below.
 </step>
@@ -546,7 +538,7 @@ ls .planning/phases/*/SUMMARY.md 2>/dev/null | sort -r | head -2 | tail -1
 
 If previous phase SUMMARY.md has "Issues Encountered" != "None" or "Next Phase Readiness" mentions blockers:
 
-Use AskUserQuestion:
+Use question:
 
 - header: "Previous Issues"
 - question: "Previous phase had unresolved items: [summary]. How to proceed?"
@@ -958,7 +950,7 @@ After TDD plan completion, ensure:
 - Standard plans: Multiple tasks, 1 commit per task, 2-4 commits total
 - TDD plans: Single feature, 2-3 commits for RED/GREEN/REFACTOR cycle
 
-See `~/.claude/get-shit-done/references/tdd.md` for TDD plan structure.
+See `~/.config/opencode/get-shit-done/references/tdd.md` for TDD plan structure.
 </tdd_plan_execution>
 
 <task_commit>
@@ -1050,7 +1042,7 @@ TASK_COMMITS+=("Task ${TASK_NUM}: ${TASK_COMMIT}")
 <step name="checkpoint_protocol">
 When encountering `type="checkpoint:*"`:
 
-**Critical: Claude automates everything with CLI/API before checkpoints.** Checkpoints are for verification and decisions, not manual work.
+**Critical: The assistant automates everything with CLI/API before checkpoints.** Checkpoints are for verification and decisions, not manual work.
 
 **Display checkpoint clearly:**
 
@@ -1106,7 +1098,7 @@ Options:
 **For checkpoint:human-action (1% - rare, only for truly unavoidable manual steps):**
 
 ```
-I automated: [what Claude already did via CLI/API]
+I automated: [what the assistant already did via CLI/API]
 
 Need your help with: [the ONE thing with no CLI/API - email link, 2FA code]
 
@@ -1126,7 +1118,7 @@ I'll verify after: [verification]
 - If verification passes or N/A: continue to next task
 - If verification fails: inform user, wait for resolution
 
-See ~/.claude/get-shit-done/references/checkpoints.md for complete checkpoint guidance.
+See ~/.config/opencode/get-shit-done/references/checkpoints.md for complete checkpoint guidance.
 </step>
 
 <step name="checkpoint_return_for_orchestrator">
@@ -1260,7 +1252,7 @@ grep -A 50 "^user_setup:" .planning/phases/XX-name/{phase}-{plan}-PLAN.md | head
 
 **If user_setup exists and is not empty:**
 
-Create `.planning/phases/XX-name/{phase}-USER-SETUP.md` using template from `~/.claude/get-shit-done/templates/user-setup.md`.
+Create `.planning/phases/XX-name/{phase}-USER-SETUP.md` using template from `~/.config/opencode/get-shit-done/templates/user-setup.md`.
 
 **Content generation:**
 
@@ -1321,7 +1313,7 @@ Set `USER_SETUP_CREATED=true` if file was generated, for use in completion messa
 
 <step name="create_summary">
 Create `{phase}-{plan}-SUMMARY.md` as specified in the prompt's `<output>` section.
-Use ~/.claude/get-shit-done/templates/summary.md for structure.
+Use ~/.config/opencode/get-shit-done/templates/summary.md for structure.
 
 **File location:** `.planning/phases/XX-name/{phase}-{plan}-SUMMARY.md`
 
@@ -1518,7 +1510,7 @@ PLAN.md was already committed during plan-phase. This final commit captures exec
 If `COMMIT_PLANNING_DOCS=false` (set in load_project_state):
 - Skip all git operations for .planning/ files
 - Planning docs exist locally but are gitignored
-- Log: "Skipping planning docs commit (commit_docs: false)"
+- Log: "Skipping planning docs commit (planning.commit_docs: false)"
 - Proceed to next step
 
 If `COMMIT_PLANNING_DOCS=true` (default):
@@ -1714,14 +1706,14 @@ Summary: .planning/phases/{phase-dir}/{phase}-{plan}-SUMMARY.md
 
 **{phase}-{next-plan}: [Plan Name]** — [objective from next PLAN.md]
 
-`/gsd:execute-phase {phase}`
+`/gsd-execute-phase {phase}`
 
 <sub>`/clear` first → fresh context window</sub>
 
 ---
 
 **Also available:**
-- `/gsd:verify-work {phase}-{plan}` — manual acceptance testing before continuing
+- `/gsd-verify-work {phase}-{plan}` — manual acceptance testing before continuing
 - Review what was built before continuing
 
 ---
@@ -1775,15 +1767,15 @@ All {Y} plans finished.
 
 **Phase {Z+1}: {Next Phase Name}** — {Goal from ROADMAP.md}
 
-`/gsd:plan-phase {Z+1}`
+`/gsd-plan-phase {Z+1}`
 
 <sub>`/clear` first → fresh context window</sub>
 
 ---
 
 **Also available:**
-- `/gsd:verify-work {Z}` — manual acceptance testing before continuing
-- `/gsd:discuss-phase {Z+1}` — gather context first
+- `/gsd-verify-work {Z}` — manual acceptance testing before continuing
+- `/gsd-discuss-phase {Z+1}` — gather context first
 - Review phase accomplishments before continuing
 
 ---
@@ -1813,15 +1805,15 @@ All {Y} plans finished.
 
 **Complete Milestone** — archive and prepare for next
 
-`/gsd:complete-milestone`
+`/gsd-complete-milestone`
 
 <sub>`/clear` first → fresh context window</sub>
 
 ---
 
 **Also available:**
-- `/gsd:verify-work` — manual acceptance testing before completing milestone
-- `/gsd:add-phase <description>` — add another phase before completing
+- `/gsd-verify-work` — manual acceptance testing before completing milestone
+- `/gsd-add-phase <description>` — add another phase before completing
 - Review accomplishments before archiving
 
 ---

@@ -1,21 +1,20 @@
 ---
-name: gsd:plan-phase
 description: Create detailed execution plan for a phase (PLAN.md) with verification loop
 argument-hint: "[phase] [--research] [--skip-research] [--gaps] [--skip-verify]"
 agent: gsd-planner
-allowed-tools:
-  - Read
-  - Write
-  - Bash
-  - Glob
-  - Grep
-  - Task
-  - WebFetch
-  - mcp__context7__*
+tools:
+  read: true
+  write: true
+  bash: true
+  glob: true
+  grep: true
+  task: true
+  webfetch: true
+  mcp__context7__*: true
 ---
 
 <execution_context>
-@~/.claude/get-shit-done/references/ui-brand.md
+@~/.config/opencode/get-shit-done/references/ui-brand.md
 </execution_context>
 
 <objective>
@@ -42,29 +41,21 @@ Normalize phase input in step 2 before any directory lookups.
 
 <process>
 
-## 1. Validate Environment and Resolve Model Profile
+## 1. Validate Environment and Resolve Models
 
 ```bash
 ls .planning/ 2>/dev/null
 ```
 
-**If not found:** Error - user should run `/gsd:new-project` first.
+**If not found:** Error - user should run `/gsd-new-project` first.
 
-**Resolve model profile for agent spawning:**
+**Resolve models for agent spawning:**
 
 ```bash
-MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "balanced")
+researcher_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-phase-researcher"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-high")
+planner_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-planner"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-high")
+checker_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-plan-checker"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-high")
 ```
-
-Default to "balanced" if not set.
-
-**Model lookup table:**
-
-| Agent | quality | balanced | budget |
-|-------|---------|----------|--------|
-| gsd-phase-researcher | opus | sonnet | haiku |
-| gsd-planner | opus | opus | sonnet |
-| gsd-plan-checker | sonnet | sonnet | haiku |
 
 Store resolved models for use in Task calls below.
 
@@ -206,8 +197,8 @@ Write research findings to: {phase_dir}/{phase}-RESEARCH.md
 
 ```
 Task(
-  prompt="First, read ~/.claude/agents/gsd-phase-researcher.md for your role and instructions.\n\n" + research_prompt,
-  subagent_type="general-purpose",
+  prompt=research_prompt,
+  subagent_type="gsd-phase-researcher",
   model="{researcher_model}",
   description="Research Phase {phase}"
 )
@@ -292,7 +283,7 @@ Fill prompt with inlined content and spawn:
 </planning_context>
 
 <downstream_consumer>
-Output consumed by /gsd:execute-phase
+Output consumed by /gsd-execute-phase
 Plans must be executable prompts with:
 
 - Frontmatter (wave, depends_on, files_modified, autonomous)
@@ -315,8 +306,8 @@ Before returning PLANNING COMPLETE:
 
 ```
 Task(
-  prompt="First, read ~/.claude/agents/gsd-planner.md for your role and instructions.\n\n" + filled_prompt,
-  subagent_type="general-purpose",
+  prompt=filled_prompt,
+  subagent_type="gsd-planner",
   model="{planner_model}",
   description="Plan Phase {phase}"
 )
@@ -445,8 +436,8 @@ Return what changed.
 
 ```
 Task(
-  prompt="First, read ~/.claude/agents/gsd-planner.md for your role and instructions.\n\n" + revision_prompt,
-  subagent_type="general-purpose",
+  prompt=revision_prompt,
+  subagent_type="gsd-planner",
   model="{planner_model}",
   description="Revise Phase {phase} plans"
 )
@@ -496,7 +487,7 @@ Verification: {Passed | Passed with override | Skipped}
 
 **Execute Phase {X}** — run all {N} plans
 
-/gsd:execute-phase {X}
+/gsd-execute-phase {X}
 
 <sub>/clear first → fresh context window</sub>
 
@@ -504,7 +495,7 @@ Verification: {Passed | Passed with override | Skipped}
 
 **Also available:**
 - cat .planning/phases/{phase-dir}/*-PLAN.md — review plans
-- /gsd:plan-phase {X} --research — re-research first
+- /gsd-plan-phase {X} --research — re-research first
 
 ───────────────────────────────────────────────────────────────
 </offer_next>

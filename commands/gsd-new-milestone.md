@@ -1,13 +1,12 @@
 ---
-name: gsd:new-milestone
 description: Start a new milestone cycle — update PROJECT.md and route to requirements
 argument-hint: "[milestone name, e.g., 'v1.1 Notifications']"
-allowed-tools:
-  - Read
-  - Write
-  - Bash
-  - Task
-  - AskUserQuestion
+tools:
+  read: true
+  write: true
+  bash: true
+  task: true
+  question: true
 ---
 
 <objective>
@@ -22,14 +21,14 @@ This is the brownfield equivalent of new-project. The project exists, PROJECT.md
 - `.planning/ROADMAP.md` — phase structure (continues numbering)
 - `.planning/STATE.md` — reset for new milestone
 
-**After this command:** Run `/gsd:plan-phase [N]` to start execution.
+**After this command:** Run `/gsd-plan-phase [N]` to start execution.
 </objective>
 
 <execution_context>
-@~/.claude/get-shit-done/references/questioning.md
-@~/.claude/get-shit-done/references/ui-brand.md
-@~/.claude/get-shit-done/templates/project.md
-@~/.claude/get-shit-done/templates/requirements.md
+@~/.config/opencode/get-shit-done/references/questioning.md
+@~/.config/opencode/get-shit-done/references/ui-brand.md
+@~/.config/opencode/get-shit-done/templates/project.md
+@~/.config/opencode/get-shit-done/templates/requirements.md
 </execution_context>
 
 <context>
@@ -41,7 +40,7 @@ Milestone name: $ARGUMENTS (optional - will prompt if not provided)
 @.planning/MILESTONES.md
 @.planning/config.json
 
-**Load milestone context (if exists, from /gsd:discuss-milestone):**
+**Load milestone context (if exists, from /gsd-discuss-milestone):**
 @.planning/MILESTONE-CONTEXT.md
 </context>
 
@@ -52,7 +51,7 @@ Milestone name: $ARGUMENTS (optional - will prompt if not provided)
 - Read PROJECT.md (existing project, Validated requirements, decisions)
 - Read MILESTONES.md (what shipped previously)
 - Read STATE.md (pending todos, blockers)
-- Check for MILESTONE-CONTEXT.md (from /gsd:discuss-milestone)
+- Check for MILESTONE-CONTEXT.md (from /gsd-discuss-milestone)
 
 ## Phase 2: Gather Milestone Goals
 
@@ -63,7 +62,7 @@ Milestone name: $ARGUMENTS (optional - will prompt if not provided)
 **If no context file:**
 - Present what shipped in last milestone
 - Ask: "What do you want to build next?"
-- Use AskUserQuestion to explore features
+- Use question to explore features
 - Probe for priorities, constraints, scope
 
 ## Phase 3: Determine Milestone Version
@@ -122,29 +121,21 @@ git add .planning/PROJECT.md .planning/STATE.md
 git commit -m "docs: start milestone v[X.Y] [Name]"
 ```
 
-## Phase 6.5: Resolve Model Profile
+## Phase 6.5: Resolve Models
 
-Read model profile for agent spawning:
+Read explicit per-agent models for spawning:
 
 ```bash
-MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "balanced")
+researcher_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-project-researcher"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-high")
+synthesizer_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-research-synthesizer"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-high")
+roadmapper_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-roadmapper"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-high")
 ```
-
-Default to "balanced" if not set.
-
-**Model lookup table:**
-
-| Agent | quality | balanced | budget |
-|-------|---------|----------|--------|
-| gsd-project-researcher | opus | sonnet | haiku |
-| gsd-research-synthesizer | sonnet | sonnet | haiku |
-| gsd-roadmapper | opus | sonnet | sonnet |
 
 Store resolved models for use in Task calls below.
 
 ## Phase 7: Research Decision
 
-Use AskUserQuestion:
+Use question:
 - header: "Research"
 - question: "Research the domain ecosystem for new features before defining requirements?"
 - options:
@@ -216,7 +207,7 @@ Your STACK.md feeds into roadmap creation. Be prescriptive:
 
 <output>
 Write to: .planning/research/STACK.md
-Use template: ~/.claude/get-shit-done/templates/research-project/STACK.md
+Use template: ~/.config/opencode/get-shit-done/templates/research-project/STACK.md
 </output>
 ", subagent_type="gsd-project-researcher", model="{researcher_model}", description="Stack research")
 
@@ -257,7 +248,7 @@ Your FEATURES.md feeds into requirements definition. Categorize clearly:
 
 <output>
 Write to: .planning/research/FEATURES.md
-Use template: ~/.claude/get-shit-done/templates/research-project/FEATURES.md
+Use template: ~/.config/opencode/get-shit-done/templates/research-project/FEATURES.md
 </output>
 ", subagent_type="gsd-project-researcher", model="{researcher_model}", description="Features research")
 
@@ -299,7 +290,7 @@ Your ARCHITECTURE.md informs phase structure in roadmap. Include:
 
 <output>
 Write to: .planning/research/ARCHITECTURE.md
-Use template: ~/.claude/get-shit-done/templates/research-project/ARCHITECTURE.md
+Use template: ~/.config/opencode/get-shit-done/templates/research-project/ARCHITECTURE.md
 </output>
 ", subagent_type="gsd-project-researcher", model="{researcher_model}", description="Architecture research")
 
@@ -337,7 +328,7 @@ Your PITFALLS.md prevents mistakes in roadmap/planning. For each pitfall:
 
 <output>
 Write to: .planning/research/PITFALLS.md
-Use template: ~/.claude/get-shit-done/templates/research-project/PITFALLS.md
+Use template: ~/.config/opencode/get-shit-done/templates/research-project/PITFALLS.md
 </output>
 ", subagent_type="gsd-project-researcher", model="{researcher_model}", description="Pitfalls research")
 ```
@@ -360,7 +351,7 @@ Read these files:
 
 <output>
 Write to: .planning/research/SUMMARY.md
-Use template: ~/.claude/get-shit-done/templates/research-project/SUMMARY.md
+Use template: ~/.config/opencode/get-shit-done/templates/research-project/SUMMARY.md
 Commit after writing.
 </output>
 ", subagent_type="gsd-research-synthesizer", model="{synthesizer_model}", description="Synthesize research")
@@ -434,7 +425,7 @@ For each capability mentioned:
 
 **Scope each category:**
 
-For each category, use AskUserQuestion:
+For each category, use question:
 
 - header: "[Category name]"
 - question: "Which [category] features are in this milestone?"
@@ -452,7 +443,7 @@ Track responses:
 
 **Identify gaps:**
 
-Use AskUserQuestion:
+Use question:
 - header: "Additions"
 - question: "Any requirements research missed? (Features specific to your vision)"
 - options:
@@ -611,7 +602,7 @@ Success criteria:
 
 **CRITICAL: Ask for approval before committing:**
 
-Use AskUserQuestion:
+Use question:
 - header: "Roadmap"
 - question: "Does this roadmap structure work for you?"
 - options:
@@ -688,14 +679,14 @@ Present completion with next steps:
 
 **Phase [N]: [Phase Name]** — [Goal from ROADMAP.md]
 
-`/gsd:discuss-phase [N]` — gather context and clarify approach
+`/gsd-discuss-phase [N]` — gather context and clarify approach
 
 <sub>`/clear` first → fresh context window</sub>
 
 ---
 
 **Also available:**
-- `/gsd:plan-phase [N]` — skip discussion, plan directly
+- `/gsd-plan-phase [N]` — skip discussion, plan directly
 
 ───────────────────────────────────────────────────────────────
 ```
@@ -715,7 +706,7 @@ Present completion with next steps:
 - [ ] User feedback incorporated (if any)
 - [ ] ROADMAP.md created with phases continuing from previous milestone
 - [ ] All commits made (if planning docs committed)
-- [ ] User knows next step is `/gsd:discuss-phase [N]`
+- [ ] User knows next step is `/gsd-discuss-phase [N]`
 
 **Atomic commits:** Each phase commits its artifacts immediately. If context is lost, artifacts persist.
 </success_criteria>

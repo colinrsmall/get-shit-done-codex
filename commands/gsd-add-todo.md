@@ -1,12 +1,12 @@
 ---
-name: gsd:add-todo
 description: Capture idea or task as todo from current conversation context
 argument-hint: [optional description]
-allowed-tools:
-  - Read
-  - Write
-  - Bash
-  - Glob
+tools:
+  read: true
+  write: true
+  bash: true
+  glob: true
+  question: true
 ---
 
 <objective>
@@ -37,7 +37,7 @@ Note existing areas for consistency in infer_area step.
 
 <step name="extract_content">
 **With arguments:** Use as the title/focus.
-- `/gsd:add-todo Add auth token refresh` → title = "Add auth token refresh"
+- `/gsd-add-todo Add auth token refresh` → title = "Add auth token refresh"
 
 **Without arguments:** Analyze recent conversation to extract:
 - The specific problem, idea, or task discussed
@@ -78,7 +78,7 @@ If potential duplicate found:
 1. Read the existing todo
 2. Compare scope
 
-If overlapping, use AskUserQuestion:
+If overlapping, use question:
 - header: "Duplicate?"
 - question: "Similar todo exists: [title]. What would you like to do?"
 - options:
@@ -108,7 +108,7 @@ files:
 
 ## Problem
 
-[problem description - enough context for future Claude to understand weeks later]
+[problem description - enough context for future assistant to understand weeks later]
 
 ## Solution
 
@@ -133,7 +133,7 @@ COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_
 git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
 ```
 
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations, log "Todo saved (not committed - commit_docs: false)"
+**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations, log "Todo saved (not committed - planning.commit_docs: false)"
 
 **If `COMMIT_PLANNING_DOCS=true` (default):**
 
@@ -165,7 +165,7 @@ Would you like to:
 
 1. Continue with current work
 2. Add another todo
-3. View all todos (/gsd:check-todos)
+3. View all todos (/gsd-check-todos)
 ```
 </step>
 
@@ -185,7 +185,7 @@ Would you like to:
 <success_criteria>
 - [ ] Directory structure exists
 - [ ] Todo file created with valid frontmatter
-- [ ] Problem section has enough context for future Claude
+- [ ] Problem section has enough context for future assistant
 - [ ] No duplicates (checked and resolved)
 - [ ] Area consistent with existing todos
 - [ ] STATE.md updated if exists

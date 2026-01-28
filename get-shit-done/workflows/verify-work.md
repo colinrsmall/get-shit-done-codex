@@ -1,13 +1,13 @@
 <purpose>
-Validate built features through conversational testing with persistent state. Creates UAT.md that tracks test progress, survives /clear, and feeds gaps into /gsd:plan-phase --gaps.
+Validate built features through conversational testing with persistent state. Creates UAT.md that tracks test progress, survives /clear, and feeds gaps into /gsd-plan-phase --gaps.
 
-User tests, Claude records. One test at a time. Plain text responses.
+User tests, assistant records. One test at a time. Plain text responses.
 </purpose>
 
 <philosophy>
 **Show expected, ask if reality matches.**
 
-Claude presents what SHOULD happen. User confirms or describes what's different.
+Assistant presents what SHOULD happen. User confirms or describes what's different.
 - "yes" / "y" / "next" / empty → pass
 - Anything else → logged as issue, severity inferred
 
@@ -15,26 +15,18 @@ No Pass/Fail buttons. No severity questions. Just: "Here's what should happen. D
 </philosophy>
 
 <template>
-@~/.claude/get-shit-done/templates/UAT.md
+@~/.config/opencode/get-shit-done/templates/UAT.md
 </template>
 
 <process>
 
-<step name="resolve_model_profile" priority="first">
-Read model profile for agent spawning:
+<step name="resolve_models" priority="first">
+Read explicit per-agent models for spawning:
 
 ```bash
-MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "balanced")
+planner_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-planner"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-high")
+checker_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-plan-checker"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-high")
 ```
-
-Default to "balanced" if not set.
-
-**Model lookup table:**
-
-| Agent | quality | balanced | budget |
-|-------|---------|----------|--------|
-| gsd-planner | opus | opus | sonnet |
-| gsd-plan-checker | sonnet | sonnet | haiku |
 
 Store resolved models for use in Task calls below.
 </step>
@@ -78,7 +70,7 @@ If no, continue to `create_uat_file`.
 ```
 No active UAT sessions.
 
-Provide a phase number to start testing (e.g., /gsd:verify-work 4)
+Provide a phase number to start testing (e.g., /gsd-verify-work 4)
 ```
 
 **If no active sessions AND $ARGUMENTS provided:**
@@ -204,7 +196,7 @@ Display using checkpoint box format:
 ──────────────────────────────────────────────────────────────
 ```
 
-Wait for user response (plain text, no AskUserQuestion).
+Wait for user response (plain text, no question).
 </step>
 
 <step name="process_response">
@@ -343,8 +335,8 @@ Present summary:
 ```
 All tests passed. Ready to continue.
 
-- `/gsd:plan-phase {next}` — Plan next phase
-- `/gsd:execute-phase {next}` — Execute next phase
+- `/gsd-plan-phase {next}` — Plan next phase
+- `/gsd-execute-phase {next}` — Execute next phase
 ```
 </step>
 
@@ -360,7 +352,7 @@ Spawning parallel debug agents to investigate each issue.
 ```
 
 - Load diagnose-issues workflow
-- Follow @~/.claude/get-shit-done/workflows/diagnose-issues.md
+- Follow @~/.config/opencode/get-shit-done/workflows/diagnose-issues.md
 - Spawn parallel debug agents for each issue
 - Collect root causes
 - Update UAT.md with root causes
@@ -403,7 +395,7 @@ Task(
 </planning_context>
 
 <downstream_consumer>
-Output consumed by /gsd:execute-phase
+Output consumed by /gsd-execute-phase
 Plans must be executable prompts.
 </downstream_consumer>
 """,
@@ -510,7 +502,7 @@ Display: `Max iterations reached. {N} issues remain.`
 Offer options:
 1. Force proceed (execute despite issues)
 2. Provide guidance (user gives direction, retry)
-3. Abandon (exit, user runs /gsd:plan-phase manually)
+3. Abandon (exit, user runs /gsd-plan-phase manually)
 
 Wait for user response.
 </step>
@@ -538,7 +530,7 @@ Plans verified and ready for execution.
 
 **Execute fixes** — run fix plans
 
-`/clear` then `/gsd:execute-phase {phase} --gaps-only`
+`/clear` then `/gsd-execute-phase {phase} --gaps-only`
 
 ───────────────────────────────────────────────────────────────
 ```
@@ -592,5 +584,5 @@ Default to **major** if unclear. User can correct if needed.
 - [ ] If issues: gsd-planner creates fix plans (gap_closure mode)
 - [ ] If issues: gsd-plan-checker verifies fix plans
 - [ ] If issues: revision loop until plans pass (max 3 iterations)
-- [ ] Ready for `/gsd:execute-phase --gaps-only` when complete
+- [ ] Ready for `/gsd-execute-phase --gaps-only` when complete
 </success_criteria>

@@ -1,5 +1,4 @@
 ---
-name: gsd:join-discord
 description: Join the GSD Discord community
 ---
 
@@ -10,7 +9,7 @@ Display the Discord invite link for the GSD community server.
 <output>
 # Join the GSD Discord
 
-Connect with other GSD users, get help, share what you're building, and stay updated.
+Connect with other GSD users, get help, and share what you're building.
 
 **Invite link:** https://discord.gg/5JJgD5svVS
 

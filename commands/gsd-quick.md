@@ -1,16 +1,15 @@
 ---
-name: gsd:quick
 description: Execute a quick task with GSD guarantees (atomic commits, state tracking) but skip optional agents
 argument-hint: ""
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Glob
-  - Grep
-  - Bash
-  - Task
-  - AskUserQuestion
+tools:
+  read: true
+  write: true
+  edit: true
+  glob: true
+  grep: true
+  bash: true
+  task: true
+  question: true
 ---
 
 <objective>
@@ -34,22 +33,14 @@ Orchestration is inline - no separate workflow file. Quick mode is deliberately 
 </context>
 
 <process>
-**Step 0: Resolve Model Profile**
+**Step 0: Resolve Models**
 
-Read model profile for agent spawning:
+Read explicit per-agent models for spawning:
 
 ```bash
-MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "balanced")
+planner_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-planner"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-high")
+executor_model=$(cat .planning/config.json 2>/dev/null | grep -o '"gsd-executor"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "openai/gpt-5.2-codex-high")
 ```
-
-Default to "balanced" if not set.
-
-**Model lookup table:**
-
-| Agent | quality | balanced | budget |
-|-------|---------|----------|--------|
-| gsd-planner | opus | opus | sonnet |
-| gsd-executor | opus | sonnet | sonnet |
 
 Store resolved models for use in Task calls below.
 
@@ -62,7 +53,7 @@ Check that an active GSD project exists:
 ```bash
 if [ ! -f .planning/ROADMAP.md ]; then
   echo "Quick mode requires an active project with ROADMAP.md."
-  echo "Run /gsd:new-project first."
+  echo "Run /gsd-new-project first."
   exit 1
 fi
 ```
@@ -75,15 +66,9 @@ Quick tasks can run mid-phase - validation only checks ROADMAP.md exists, not ph
 
 **Step 2: Get task description**
 
-Prompt user interactively for the task description:
+Ask inline (freeform, NOT question):
 
-```
-AskUserQuestion(
-  header: "Quick Task",
-  question: "What do you want to do?",
-  followUp: null
-)
-```
+"What do you want to do?"
 
 Store response as `$DESCRIPTION`.
 
@@ -157,7 +142,6 @@ Task(
 - Create a SINGLE plan with 1-3 focused tasks
 - Quick tasks should be atomic and self-contained
 - No research phase, no checker phase
-- Target ~30% context usage (simple, focused)
 </constraints>
 
 <output>
@@ -267,8 +251,6 @@ git commit -m "$(cat <<'EOF'
 docs(quick-${next_num}): ${DESCRIPTION}
 
 Quick task completed.
-
-Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 EOF
 )"
 ```
@@ -291,7 +273,7 @@ Commit: ${commit_hash}
 
 ---
 
-Ready for next task: /gsd:quick
+Ready for next task: /gsd-quick
 ```
 
 </process>

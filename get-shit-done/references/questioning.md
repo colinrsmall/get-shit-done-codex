@@ -66,9 +66,9 @@ Use these as inspiration, not a checklist. Pick what's relevant to the thread.
 
 </question_types>
 
-<using_askuserquestion>
+<using_question>
 
-Use AskUserQuestion to help users think by presenting concrete options to react to.
+Use the question tool to help users think by presenting concrete options to react to.
 
 **Good options:**
 - Interpretations of what they might mean
@@ -94,7 +94,7 @@ User mentions "frustrated with current tools"
 - question: "What specifically frustrates you?"
 - options: ["Too many clicks", "Missing features", "Unreliable", "Let me explain"]
 
-</using_askuserquestion>
+</using_question>
 
 <context_checklist>
 
@@ -134,7 +134,7 @@ Loop until "Create PROJECT.md" selected.
 - **Rushing** — Minimizing questions to get to "the work"
 - **Shallow acceptance** — Taking vague answers without probing
 - **Premature constraints** — Asking about tech stack before understanding the idea
-- **User skills** — NEVER ask about user's technical experience. Claude builds.
+- **User skills** — NEVER ask about user's technical experience. Assistant builds.
 
 </anti_patterns>
 

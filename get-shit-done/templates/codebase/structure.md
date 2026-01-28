@@ -124,32 +124,25 @@ Template for `.planning/codebase/STRUCTURE.md` - captures physical file organiza
 
 ```
 get-shit-done/
-├── bin/                # Executable entry points
-├── commands/           # Slash command definitions
-│   └── gsd/           # GSD-specific commands
-├── get-shit-done/     # Skill resources
-│   ├── references/    # Principle documents
-│   ├── templates/     # File templates
-│   └── workflows/     # Multi-step procedures
-├── src/               # Source code (if applicable)
-├── tests/             # Test files
-├── package.json       # Project manifest
-└── README.md          # User documentation
+├── agents/             # Subagent role prompts
+├── commands/           # Slash command definitions (OpenCode)
+├── get-shit-done/      # Shared workflows/templates/references
+│   ├── references/     # Principle documents
+│   ├── templates/      # File templates
+│   └── workflows/      # Multi-step procedures
+├── hooks/              # Optional hooks (statusline, etc.)
+├── assets/             # Images used in docs
+├── package.json        # Repo metadata
+└── README.md           # User documentation
 ```
 
 ## Directory Purposes
 
-**bin/**
-- Purpose: CLI entry points
-- Contains: install.js (installer script)
-- Key files: install.js - handles npx installation
-- Subdirectories: None
-
-**commands/gsd/**
-- Purpose: Slash command definitions for Claude Code
-- Contains: *.md files (one per command)
-- Key files: new-project.md, plan-phase.md, execute-plan.md
-- Subdirectories: None (flat structure)
+**commands/**
+- Purpose: Slash command definitions for OpenCode
+- Contains: `gsd-*.md` files (one per command)
+- Key files: gsd-new-project.md, gsd-plan-phase.md, gsd-execute-phase.md
+- Structure: Flat (no nested folders)
 
 **get-shit-done/references/**
 - Purpose: Core philosophy and guidance documents
@@ -172,28 +165,29 @@ get-shit-done/
 ## Key File Locations
 
 **Entry Points:**
-- `bin/install.js` - Installation script (npx entry)
+- Slash commands: `commands/gsd-*.md`
 
 **Configuration:**
-- `package.json` - Project metadata, dependencies, bin entry
+- `package.json` - Repo metadata (not used for installation)
 - `.gitignore` - Excluded files
 
 **Core Logic:**
-- `bin/install.js` - All installation logic (file copying, path replacement)
+- Command orchestrators: `commands/gsd-*.md`
+- Subagent roles: `agents/gsd-*.md`
+- Shared procedures: `get-shit-done/workflows/*.md`
 
 **Testing:**
 - `tests/` - Test files (if present)
 
 **Documentation:**
 - `README.md` - User-facing installation and usage guide
-- `CLAUDE.md` - Instructions for Claude Code when working in this repo
 
 ## Naming Conventions
 
 **Files:**
 - kebab-case.md: Markdown documents
 - kebab-case.js: JavaScript source files
-- UPPERCASE.md: Important project files (README, CLAUDE, CHANGELOG)
+- UPPERCASE.md: Important project files (README, CHANGELOG)
 
 **Directories:**
 - kebab-case: All directories
@@ -206,7 +200,7 @@ get-shit-done/
 ## Where to Add New Code
 
 **New Slash Command:**
-- Primary code: `commands/gsd/{command-name}.md`
+- Primary code: `commands/gsd-{command-name}.md`
 - Tests: `tests/commands/{command-name}.test.js` (if testing implemented)
 - Documentation: Update `README.md` with new command
 
@@ -216,26 +210,26 @@ get-shit-done/
 
 **New Workflow:**
 - Implementation: `get-shit-done/workflows/{name}.md`
-- Usage: Reference from command with `@~/.claude/get-shit-done/workflows/{name}.md`
+- Usage: Reference from command with `@~/.config/opencode/get-shit-done/workflows/{name}.md`
 
 **New Reference Document:**
 - Implementation: `get-shit-done/references/{name}.md`
 - Usage: Reference from commands/workflows as needed
 
 **Utilities:**
-- No utilities yet (`install.js` is monolithic)
-- If extracted: `src/utils/`
+- No shared utilities layer (commands/workflows are the "logic")
+- If needed: `src/utils/`
 
 ## Special Directories
 
 **get-shit-done/**
-- Purpose: Resources installed to ~/.claude/
-- Source: Copied by bin/install.js during installation
+- Purpose: Resources copied to `~/.config/opencode/get-shit-done/`
+- Source: Manual copy (no installer)
 - Committed: Yes (source of truth)
 
 **commands/**
-- Purpose: Slash commands installed to ~/.claude/commands/
-- Source: Copied by bin/install.js during installation
+- Purpose: Slash commands copied to `~/.config/opencode/commands/`
+- Source: Manual copy (no installer)
 - Committed: Yes (source of truth)
 
 ---

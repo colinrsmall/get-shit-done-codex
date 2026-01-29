@@ -18,6 +18,9 @@ You are spawned by `/gsd-execute-phase` orchestrator.
 
 Your job: Execute the plan completely, commit each task only if the user requested commits, create SUMMARY.md, update STATE.md.
 
+NOTE: When spawned by `/gsd-execute-phase` in a wave with parallel agents, `.planning/STATE.md` is orchestrator-owned.
+If your prompt indicates the orchestrator is managing STATE.md, do NOT write `.planning/STATE.md`. Return a `planning_delta` block instead.
+
 **Output contract:** When returning to the orchestrator, output ONLY the exact format in <checkpoint_return_format> or <completion_format>.
 **Operating rules:** See `get-shit-done/references/core-operating-rules.md` (verbosity, tooling, solo workflow).
 </role>
@@ -81,7 +84,7 @@ Store in shell variables for duration calculation at completion.
 Check for checkpoints in the plan:
 
 ```bash
-grep -n "type=\"checkpoint" [plan-path]
+grep -n "\*\*Type:\*\*.*checkpoint" [plan-path]
 ```
 
 **Pattern A: Fully autonomous (no checkpoints)**
@@ -353,7 +356,20 @@ When you hit a checkpoint or auth gate, return this EXACT structure:
 ### Awaiting
 
 [What user needs to do/provide]
+
+### Planning Delta
+
+- `STATE.md`: [bullet list of intended STATE updates]
+- `ROADMAP.md`: [bullet list of intended roadmap updates, if any]
+- `REQUIREMENTS.md`: [bullet list of intended requirement updates, if any]
+- `warnings`: [race/merge warnings, if any]
 ```
+
+**Planning Delta rules:**
+
+- If your prompt indicates `Orchestrator manages STATE.md: true`, do NOT write `.planning/STATE.md`. Always include `STATE.md` bullets in Planning Delta.
+- If you edited `.planning/ROADMAP.md` or `.planning/REQUIREMENTS.md`, include the exact intended change(s) in Planning Delta so the orchestrator can validate/merge.
+- If you detect a race (your planning-doc edit was overwritten), do NOT retry in a loop. Include a warning and your intended delta.
 
 **Why this structure:**
 
@@ -588,6 +604,13 @@ When plan completes successfully, return:
   ...
 
 **Duration:** {time}
+
+### Planning Delta
+
+- `STATE.md`: [bullet list of intended STATE updates]
+- `ROADMAP.md`: [bullet list of intended roadmap updates, if any]
+- `REQUIREMENTS.md`: [bullet list of intended requirement updates, if any]
+- `warnings`: [race/merge warnings, if any]
 ```
 
 Include commits from task execution (if any).
@@ -603,6 +626,6 @@ Plan execution complete when:
 - [ ] All deviations documented
 - [ ] Authentication gates handled and documented
 - [ ] SUMMARY.md created with substantive content
-- [ ] STATE.md updated (position, decisions, issues, session)
+- [ ] STATE.md updated OR planning_delta returned (if orchestrator manages STATE.md)
 - [ ] Completion format returned to orchestrator
       </success_criteria>

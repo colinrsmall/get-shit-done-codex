@@ -29,8 +29,8 @@ Then verify each level against the actual codebase.
 
 ```bash
 # Phase directory (match both zero-padded and unpadded)
-PADDED_PHASE=$(printf "%02d" ${PHASE_ARG} 2>/dev/null || echo "${PHASE_ARG}")
-PHASE_DIR=$(ls -d .planning/phases/${PADDED_PHASE}-* .planning/phases/${PHASE_ARG}-* 2>/dev/null | head -1)
+PADDED_PHASE=$(printf "%02d" "$PHASE_ARG" 2>/dev/null || echo "$PHASE_ARG")
+PHASE_DIR=$(ls -1 ".planning/phases" 2>/dev/null | awk -v p="$PADDED_PHASE" -v p2="$PHASE_ARG" '$0 ~ ("^"p"-") || $0 ~ ("^"p2"-") {print ".planning/phases/"$0; exit}')
 
 # Phase goal from ROADMAP
 grep -A 5 "Phase ${PHASE_NUM}" .planning/ROADMAP.md
@@ -39,10 +39,10 @@ grep -A 5 "Phase ${PHASE_NUM}" .planning/ROADMAP.md
 grep -E "^| ${PHASE_NUM}" .planning/REQUIREMENTS.md 2>/dev/null
 
 # All SUMMARY files (claims to verify)
-ls "$PHASE_DIR"/*-SUMMARY.md 2>/dev/null
+ls -1 "$PHASE_DIR" 2>/dev/null | grep -E -- '-SUMMARY\\.md$' | sed "s|^|$PHASE_DIR/|"
 
 # All PLAN files (for must_haves in frontmatter)
-ls "$PHASE_DIR"/*-PLAN.md 2>/dev/null
+ls -1 "$PHASE_DIR" 2>/dev/null | grep -E -- '-PLAN\\.md$' | sed "s|^|$PHASE_DIR/|"
 ```
 
 **Extract phase goal:** Parse ROADMAP.md for this phase's goal/description. This is the outcome to verify, not the tasks.

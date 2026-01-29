@@ -46,7 +46,10 @@ Find the next plan to execute:
 - Find plans in that phase directory
 - Identify first plan without corresponding SUMMARY
 
-Use `read` to load `.planning/ROADMAP.md`, then use `glob` to list PLAN and SUMMARY files in the phase directory and sort by name.
+Use `read` to load `.planning/ROADMAP.md`, then use `bash` (`ls`) to list PLAN and SUMMARY files in the phase directory and sort by name.
+
+NOTE: In OpenCode, `glob` may skip gitignored paths. `.planning/` is commonly gitignored.
+Prefer using `bash` (`ls`) for discovery of `.planning/**` and `read` for contents.
 
 **Logic:**
 
@@ -125,8 +128,8 @@ Plans are divided into segments by checkpoints. Each segment is routed to optima
 **1. Check for checkpoints:**
 
 ```bash
-# Find all checkpoints and their types
-grep -n "type=\"checkpoint" .planning/phases/XX-name/{phase}-{plan}-PLAN.md
+# Find all checkpoints (plan format uses Markdown task blocks)
+grep -n "\*\*Type:\*\*.*checkpoint" .planning/phases/XX-name/{phase}-{plan}-PLAN.md
 ```
 
 **2. Analyze execution strategy:**
@@ -325,8 +328,8 @@ For Pattern A (fully autonomous) and Pattern C (decision-dependent), skip this s
 ````
 1. Parse plan to identify segments:
    - Read plan file
-   - Find checkpoint locations: grep -n "type=\"checkpoint" PLAN.md
-   - Identify checkpoint types: grep "type=\"checkpoint" PLAN.md | grep -o 'checkpoint:[^"]*'
+   - Find checkpoint locations: grep -n "\*\*Type:\*\*.*checkpoint" PLAN.md
+   - Identify checkpoint types: grep "\*\*Type:\*\*" PLAN.md | grep -o 'checkpoint:[^` ]*'
    - Build segment map:
      * Segment 1: Start → first checkpoint (tasks 1-X)
      * Checkpoint 1: Type and location

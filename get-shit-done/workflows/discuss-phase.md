@@ -132,9 +132,12 @@ WORKFLOW_MODE=${WORKFLOW_MODE:-interactive}
 Check if CONTEXT.md already exists:
 
 ```bash
-# Match both zero-padded (05-*) and unpadded (5-*) folders
-PADDED_PHASE=$(printf "%02d" ${PHASE})
-ls .planning/phases/${PADDED_PHASE}-*/*-CONTEXT.md .planning/phases/${PHASE}-*/*-CONTEXT.md 2>/dev/null
+# Match both zero-padded (05-*) and unpadded (5-*) folders (avoid shell globs to prevent zsh nomatch)
+PADDED_PHASE=$(printf "%02d" "$PHASE")
+PHASE_DIR=$(ls -1 ".planning/phases" 2>/dev/null | awk -v p="$PADDED_PHASE" -v p2="$PHASE" '$0 ~ ("^"p"-") || $0 ~ ("^"p2"-") {print ".planning/phases/"$0; exit}')
+if [ -n "$PHASE_DIR" ]; then
+  ls -1 "$PHASE_DIR" 2>/dev/null | grep -E -- '-CONTEXT\\.md$' | sed "s|^|$PHASE_DIR/|"
+fi
 ```
 
 **If exists:**
@@ -273,8 +276,8 @@ Create CONTEXT.md capturing decisions made.
 
 ```bash
 # Match existing directory (padded or unpadded)
-PADDED_PHASE=$(printf "%02d" ${PHASE})
-PHASE_DIR=$(ls -d .planning/phases/${PADDED_PHASE}-* .planning/phases/${PHASE}-* 2>/dev/null | head -1)
+PADDED_PHASE=$(printf "%02d" "$PHASE")
+PHASE_DIR=$(ls -1 ".planning/phases" 2>/dev/null | awk -v p="$PADDED_PHASE" -v p2="$PHASE" '$0 ~ ("^"p"-") || $0 ~ ("^"p2"-") {print ".planning/phases/"$0; exit}')
 if [ -z "$PHASE_DIR" ]; then
   # Create from roadmap name (lowercase, hyphens)
   PHASE_NAME=$(grep "Phase ${PHASE}:" .planning/ROADMAP.md | sed 's/.*Phase [0-9]*: //' | tr '[:upper:]' '[:lower:]' | tr ' ' '-')

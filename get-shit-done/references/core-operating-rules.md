@@ -26,6 +26,7 @@ Shared operating rules for all GSD agents and workflows. Keep agent-unique behav
 - Use `bash` for git operations, tests, builds, and running CLIs.
 - Avoid long shell pipelines when a tool exists for the same purpose.
 - Batch independent reads/searches in parallel when possible.
+- OpenCode note: `glob` may skip gitignored paths. `.planning/` is commonly gitignored; use `bash` (`ls`, etc.) for discovery and `read` for contents.
 - Never run `git commit` or `git push` unless the user explicitly requested it.
 - Never commit `.planning/` artifacts (even if commits are requested).
 

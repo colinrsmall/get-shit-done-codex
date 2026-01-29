@@ -188,7 +188,7 @@ Continue to verify_output.
 <step name="verify_output">
 Verify all documents created successfully:
 
-- Use `glob` to list `.planning/codebase/*.md`
+- Use `bash` (`ls`) to list `.planning/codebase/*.md` (OpenCode `glob` may skip gitignored `.planning/`)
 - Use `read` to confirm each file is non-empty (line count via last line number in Read output)
 
 **Verification checklist:**

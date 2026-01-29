@@ -11,6 +11,26 @@ Read STATE.md before any operation to load project context.
 Read config.json for planning behavior settings.
 </required_reading>
 
+<opencode_notes>
+
+- OpenCode `glob` may skip gitignored paths. `.planning/` is commonly gitignored.
+  Use `bash` (`ls`, etc.) to discover `.planning/**` files, and `read` to load known paths.
+- Avoid zsh `nomatch` failures: do not rely on unguarded shell globs like `.planning/phases/1-*`.
+
+</opencode_notes>
+
+<config_precedence>
+
+Config vs command intent:
+
+- If the user explicitly requests wave-based parallel execution, treat that as an override even if `.planning/config.json` has `parallelization.enabled=false`.
+- Still respect safety/concurrency limits when parallelizing:
+  - `parallelization.max_concurrent_agents`
+  - `parallelization.min_plans_for_parallel`
+- If the user did not explicitly request parallelism, honor `.planning/config.json`.
+
+</config_precedence>
+
 <process>
 
 <step name="load_project_state">
@@ -39,15 +59,19 @@ Options:
 Confirm phase exists and has plans:
 
 ```bash
-# Match both zero-padded (05-*) and unpadded (5-*) folders
-PADDED_PHASE=$(printf "%02d" ${PHASE_ARG} 2>/dev/null || echo "${PHASE_ARG}")
-PHASE_DIR=$(ls -d .planning/phases/${PADDED_PHASE}-* .planning/phases/${PHASE_ARG}-* 2>/dev/null | head -1)
-if [ -z "$PHASE_DIR" ]; then
-  echo "ERROR: No phase directory matching '${PHASE_ARG}'"
+# Match both zero-padded (05-*) and unpadded (5-*) folders.
+# Avoid shell globbing here: zsh `nomatch` can error on non-matching globs.
+PADDED_PHASE=$(printf "%02d" "$PHASE_ARG" 2>/dev/null || echo "$PHASE_ARG")
+PHASE_DIR=$(
+  ls -1 ".planning/phases" 2>/dev/null |
+    awk -v p="$PADDED_PHASE" -v p2="$PHASE_ARG" '$0 ~ ("^"p"-") || $0 ~ ("^"p2"-") {print ".planning/phases/"$0; exit}'
+)
+if [ -z "$PHASE_DIR" ] || [ ! -d "$PHASE_DIR" ]; then
+  echo "ERROR: No phase directory matching '$PHASE_ARG'"
   exit 1
 fi
 
-PLAN_COUNT=$(ls -1 "$PHASE_DIR"/*-PLAN.md 2>/dev/null | wc -l | tr -d ' ')
+PLAN_COUNT=$(ls -1 "$PHASE_DIR" 2>/dev/null | grep -E -- '-PLAN\.md$' | wc -l | tr -d ' ')
 if [ "$PLAN_COUNT" -eq 0 ]; then
   echo "ERROR: No plans found in $PHASE_DIR"
   exit 1
@@ -61,11 +85,11 @@ Report: "Found {N} plans in {phase_dir}"
 List all plans and extract metadata:
 
 ```bash
-# Get all plans
-ls -1 "$PHASE_DIR"/*-PLAN.md 2>/dev/null | sort
+# Get all plans (avoid shell globs in case of zsh nomatch)
+ls -1 "$PHASE_DIR" 2>/dev/null | grep -E -- '-PLAN\.md$' | sort | sed "s|^|$PHASE_DIR/|"
 
 # Get completed plans (have SUMMARY.md)
-ls -1 "$PHASE_DIR"/*-SUMMARY.md 2>/dev/null | sort
+ls -1 "$PHASE_DIR" 2>/dev/null | grep -E -- '-SUMMARY\.md$' | sort | sed "s|^|$PHASE_DIR/|"
 ```
 
 For each plan, read frontmatter to extract:
@@ -93,7 +117,8 @@ Read `wave` from each plan's frontmatter and group by wave number:
 
 ```bash
 # For each plan, extract wave from frontmatter
-for plan in $PHASE_DIR/*-PLAN.md; do
+for plan_file in $(ls -1 "$PHASE_DIR" 2>/dev/null | grep -E -- '-PLAN\.md$' | sort); do
+  plan="$PHASE_DIR/$plan_file"
   wave=$(grep "^wave:" "$plan" | cut -d: -f2 | tr -d ' ')
   autonomous=$(grep "^autonomous:" "$plan" | cut -d: -f2 | tr -d ' ')
   echo "$plan:$wave:$autonomous"
@@ -131,6 +156,19 @@ The "What it builds" column comes from skimming plan names/objectives. Keep it b
 <step name="execute_waves">
 Execute each wave in sequence. Autonomous plans within a wave run in parallel.
 
+<concurrency_rules>
+
+**Shared planning files + parallelism (important):**
+
+- Treat `.planning/STATE.md` as **orchestrator-owned** during phase execution.
+  - Executors SHOULD NOT write `.planning/STATE.md` when spawned by `/gsd-execute-phase`.
+  - Executors instead return a `planning_delta` block (see executor contract) and the orchestrator applies it.
+- For other files (including `.planning/ROADMAP.md`, `.planning/REQUIREMENTS.md`), executors may edit them *if* the plan requires it.
+  - To avoid races, only parallelize plans whose `files_modified` sets are disjoint.
+  - If two plans might overlap (including shared `.planning/*` files), run them sequentially even if they share a wave.
+
+</concurrency_rules>
+
 **For each wave:**
 
 1. **Describe what's being built (BEFORE spawning):**
@@ -158,18 +196,12 @@ Execute each wave in sequence. Autonomous plans within a wave run in parallel.
    - Bad: "Executing terrain generation plan"
    - Good: "Procedural terrain generator using Perlin noise — creates height maps, biome zones, and collision meshes. Required before vehicle physics can interact with ground."
 
-2. **Read files and spawn all autonomous agents in wave simultaneously:**
+2. **Spawn all autonomous agents in wave simultaneously:**
 
-   Before spawning, read file contents. The `@` syntax does not work across Task() boundaries - content must be inlined.
+   The `@` syntax does not expand across Task() boundaries.
+   Instead of inlining full plan/state content (context bloat), pass file paths and let the executor `read` them.
 
-   ```bash
-   # Read each plan in the wave
-   PLAN_CONTENT=$(cat "{plan_path}")
-   STATE_CONTENT=$(cat .planning/STATE.md)
-   CONFIG_CONTENT=$(cat .planning/config.json 2>/dev/null)
-   ```
-
-   Use Task tool with multiple parallel calls. Each agent gets prompt with inlined content:
+   Use Task tool with multiple parallel calls. Each agent gets a prompt like:
 
    ```
    <objective>
@@ -186,21 +218,17 @@ Execute each wave in sequence. Autonomous plans within a wave run in parallel.
    </execution_context>
 
    <context>
-   Plan:
-   {plan_content}
-
-   Project state:
-   {state_content}
-
-   Config (if exists):
-   {config_content}
+   Plan path: {plan_path}
+   Phase dir: {phase_dir}
+   Config path (if exists): .planning/config.json
+   Orchestrator manages STATE.md: true
    </context>
 
    <success_criteria>
    - [ ] All tasks executed
    - [ ] Each task committed individually (if commits requested)
    - [ ] SUMMARY.md created in plan directory
-   - [ ] STATE.md updated with position and decisions
+   - [ ] planning_delta returned for STATE.md update (orchestrator applies)
    </success_criteria>
    ```
 
@@ -214,6 +242,9 @@ Execute each wave in sequence. Autonomous plans within a wave run in parallel.
    - Verify SUMMARY.md exists at expected path
    - Read SUMMARY.md to extract what was built
    - Note any issues or deviations
+   - Apply `planning_delta` from the agent return:
+     - Update `.planning/STATE.md` (orchestrator-owned)
+     - If the agent reports `.planning/ROADMAP.md` / `.planning/REQUIREMENTS.md` edits or race warnings, validate and resolve before proceeding
 
    **Output:**
    ```

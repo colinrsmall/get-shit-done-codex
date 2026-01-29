@@ -23,7 +23,15 @@ No Pass/Fail buttons. No severity questions. Just: "Here's what should happen. D
 <step name="check_active_session">
 **First: Check for active UAT sessions**
 
-Use `glob` to find `.planning/phases/**/*-UAT.md` (limit to a few recent files).
+OpenCode note: `glob` may skip gitignored paths. `.planning/` is commonly gitignored.
+Prefer `bash` to discover UAT files (limit to a few recent files).
+
+Example:
+
+```bash
+# List UAT files (safe even when .planning is gitignored)
+bash -lc 'ls -1 .planning/phases/*/*-UAT.md 2>/dev/null | sort'
+```
 
 **If active sessions exist AND no $ARGUMENTS provided:**
 
@@ -72,11 +80,11 @@ Parse $ARGUMENTS as phase number (e.g., "4") or plan number (e.g., "04-02").
 
 ```bash
 # Find phase directory (match both zero-padded and unpadded)
-PADDED_PHASE=$(printf "%02d" ${PHASE_ARG} 2>/dev/null || echo "${PHASE_ARG}")
-PHASE_DIR=$(ls -d .planning/phases/${PADDED_PHASE}-* .planning/phases/${PHASE_ARG}-* 2>/dev/null | head -1)
+PADDED_PHASE=$(printf "%02d" "$PHASE_ARG" 2>/dev/null || echo "$PHASE_ARG")
+PHASE_DIR=$(ls -1 ".planning/phases" 2>/dev/null | awk -v p="$PADDED_PHASE" -v p2="$PHASE_ARG" '$0 ~ ("^"p"-") || $0 ~ ("^"p2"-") {print ".planning/phases/"$0; exit}')
 
 # Find SUMMARY files
-ls "$PHASE_DIR"/*-SUMMARY.md 2>/dev/null
+ls -1 "$PHASE_DIR" 2>/dev/null | grep -E -- '-SUMMARY\\.md$' | sed "s|^|$PHASE_DIR/|"
 ```
 
 Read each SUMMARY.md to extract testable deliverables.

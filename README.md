@@ -5,11 +5,6 @@
 **A lightweight meta-prompting, context engineering, and spec-driven development system for OpenCode.**
 
 This version is OpenCode-first: Claude-era coupling has been removed, and planning is explicitly collaborative with natural-language review loops.
-
-[![Discord](https://img.shields.io/badge/Discord-Join%20Server-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/5JJgD5svVS)
-[![GitHub stars](https://img.shields.io/github/stars/glittercowboy/get-shit-done?style=for-the-badge&logo=github&color=181717)](https://github.com/glittercowboy/get-shit-done)
-[![License](https://img.shields.io/badge/license-MIT-blue?style=for-the-badge)](LICENSE)
-
 </div>
 
 ---

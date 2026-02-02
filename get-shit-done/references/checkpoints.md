@@ -148,6 +148,18 @@ When the assistant encounters a checkpoint task (Type starts with `checkpoint:`)
 **Examples:** See `get-shit-done/references/checkpoints-examples.md`.
 </execution_protocol>
 
+<verification_failure_checkpoint>
+
+If any verification command fails (task-level or final verification), create a **checkpoint:decision** instead of claiming completion.
+
+**Required fields in the checkpoint:**
+- Failed command: exact command string
+- Error excerpt: first relevant error lines (no speculation)
+- Options: Retry | Skip (mark plan `status: partial`) | Stop (mark plan `status: blocked`)
+
+This aligns with GPT-5.2/Codex guidance to keep output shape explicit and avoid ungrounded diagnosis.
+</verification_failure_checkpoint>
+
 <authentication_gates>
 
 **Critical:** When the assistant tries CLI/API and gets an auth error, this is not a failure. It is a gate requiring human input to unblock automation.

@@ -10,6 +10,7 @@ Template for `.planning/phases/XX-name/{phase}-{plan}-SUMMARY.md` - phase comple
 ---
 phase: XX-name
 plan: YY
+status: complete  # complete | partial | blocked
 subsystem: [primary category: auth, payments, ui, api, database, infra, testing, etc.]
 tags: [searchable tech: jwt, stripe, react, postgres, prisma]
 
@@ -234,6 +235,11 @@ The one-liner should tell someone what actually shipped.
 
 <guidelines>
 **Frontmatter:** MANDATORY - complete all fields. Enables automatic context assembly for future planning.
+
+**Status field:**
+- `complete` only when all plan verifications pass.
+- `partial` if some tasks completed but verification failed or was skipped.
+- `blocked` if execution stopped due to a blocking issue.
 
 **One-liner:** Must be substantive. "JWT auth with refresh rotation using jose library" not "Authentication implemented".
 

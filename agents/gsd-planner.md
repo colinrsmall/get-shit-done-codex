@@ -289,17 +289,26 @@ Result: Fully sequential (02 needs 01, 03 needs 02)
 
 ## File Ownership for Parallel Execution
 
-Exclusive file ownership prevents conflicts:
+Exclusive file ownership and explicit locks prevent conflicts:
 
 ```yaml
 # Plan 01 frontmatter
 files_modified: [src/models/user.ts, src/api/users.ts]
+locks: []
 
 # Plan 02 frontmatter (no overlap = parallel)
 files_modified: [src/models/product.ts, src/api/products.ts]
+locks: []
 ```
 
-No overlap -> can run parallel.
+No overlap + no shared locks -> can run parallel.
+
+Use locks for shared resources that often collide even with disjoint files:
+- `deps` (package.json/lockfiles/pyproject)
+- `tests-harness` (tests/**/conftest.*, shared fixtures)
+- `ci-config` (CI workflows/config)
+- `app-config` (settings/env templates)
+- `planning-docs` (.planning/*.md)
 
 If file appears in multiple plans: Later plan depends on earlier (by plan number).
 
@@ -385,7 +394,9 @@ plan: NN
 type: execute
 wave: N                     # Execution wave (1, 2, 3...)
 depends_on: []              # Plan IDs this plan requires
-files_modified: []          # Files this plan touches
+files_modified: []          # Allowlist of files this plan is expected to touch
+may_touch_globs: []         # Optional glob patterns for likely extra touches
+locks: []                   # Shared resource locks (parallel safety)
 autonomous: true            # false if plan has checkpoints
 user_setup: []              # Human-required setup (omit if empty)
 
@@ -455,12 +466,16 @@ After completion, create `.planning/phases/XX-name/{phase}-{plan}-SUMMARY.md`
 | `type` | Yes | `execute` for standard, `tdd` for TDD plans |
 | `wave` | Yes | Execution wave number (1, 2, 3...) |
 | `depends_on` | Yes | Array of plan IDs this plan requires |
-| `files_modified` | Yes | Files this plan touches |
+| `files_modified` | Yes | Allowlist of files this plan is expected to touch |
+| `may_touch_globs` | No | Globs for likely extra touches (shared harness/config) |
+| `locks` | No | Shared resource locks to prevent parallel conflicts |
 | `autonomous` | Yes | `true` if no checkpoints, `false` if has checkpoints |
 | `user_setup` | No | Human-required setup items |
 | `must_haves` | Yes | Goal-backward verification criteria |
 
 **Wave is pre-computed:** Wave numbers are assigned during planning. Execute-phase reads `wave` directly from frontmatter and groups plans by wave number.
+
+**Parallel safety:** `files_modified` is an allowlist. Use `locks` to declare shared resources (e.g., `deps`, `tests-harness`, `ci-config`, `app-config`, `planning-docs`). Use `may_touch_globs` for commonly required shared files like `tests/**/conftest.*` or lockfiles.
 
 ## Context Section Rules
 
@@ -981,7 +996,7 @@ Use template structure for each PLAN.md.
 
 Write to `.planning/phases/XX-name/{phase}-{NN}-PLAN.md` (e.g., `01-02-PLAN.md` for Phase 1, Plan 2)
 
-Include frontmatter (phase, plan, type, wave, depends_on, files_modified, autonomous, must_haves).
+Include frontmatter (phase, plan, type, wave, depends_on, files_modified, may_touch_globs, locks, autonomous, must_haves).
 </step>
 
 <step name="write_review_file">
@@ -1148,7 +1163,7 @@ Phase planning complete when:
 - [ ] Dependency graph built (needs/creates for each task)
 - [ ] Tasks grouped into plans by wave, not by sequence
 - [ ] PLAN file(s) follow the Markdown plan schema (required sections + task blocks)
-- [ ] Each plan: depends_on, files_modified, autonomous, must_haves in frontmatter
+- [ ] Each plan: depends_on, files_modified, may_touch_globs, locks, autonomous, must_haves in frontmatter
 - [ ] Each plan: user_setup declared if external services involved
 - [ ] Each plan: Objective, context, tasks, verification, success criteria, output
 - [ ] Each plan: 2-3 tasks (~50% context)

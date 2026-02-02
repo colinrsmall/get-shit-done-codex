@@ -30,6 +30,11 @@ Updated: {YYYY-MM-DD}
 ## Reviewer Notes (User)
 - ...
 
+## Parallelization Safety Review
+- [ ] `files_modified` allowlist looks complete for each plan
+- [ ] `locks` declared for shared resources (deps/tests-harness/ci-config/app-config/planning-docs)
+- [ ] `may_touch_globs` covers likely shared files (e.g., tests/**/conftest.*)
+
 ## Approval
 Status: Pending | Approved
 Approved by: [name or handle]

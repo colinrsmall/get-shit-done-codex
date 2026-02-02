@@ -36,7 +36,7 @@ Template for spawning gsd-planner agent. The agent contains all planning experti
 <downstream_consumer>
 Output consumed by /gsd-execute-phase
 Plans must be executable prompts with:
-- Frontmatter (wave, depends_on, files_modified, autonomous)
+- Frontmatter (wave, depends_on, files_modified, may_touch_globs, locks, autonomous)
 - Tasks in Markdown task blocks (`### Task N:` with required `**Type:**` fields)
 - Verification criteria
 - must_haves for goal-backward verification

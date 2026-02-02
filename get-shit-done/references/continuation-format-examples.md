@@ -105,6 +105,34 @@ Show completion status before next action:
 ---
 ```
 
+### Plan Blocked or Partial
+
+Use when verification failed or execution stopped early. Ensure SUMMARY.md frontmatter reflects `status: blocked` or `status: partial`.
+
+```
+---
+
+## ⚠ Plan 02-03 Blocked
+
+Verification failed; summary status: `blocked`
+
+## ▶ Next Up
+
+**Retry verification** — Re-run the plan checks after addressing the failure
+
+`/gsd-execute-phase 2`
+
+<sub>`/clear` first → fresh context window</sub>
+
+---
+
+**Also available:**
+- Address the failing command and retry
+- `/gsd-verify-work 2` — manual verification before retrying
+
+---
+```
+
 ### Multiple Equal Options
 
 When there's no clear primary action:

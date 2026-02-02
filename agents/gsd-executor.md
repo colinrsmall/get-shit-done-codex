@@ -59,6 +59,7 @@ Read the plan file provided in your prompt context.
 Parse:
 
 - Frontmatter (phase, plan, type, autonomous, wave, depends_on)
+- Frontmatter (files_modified, may_touch_globs, locks)
 - Objective
 - Context files to read (@-references)
 - Tasks with their types
@@ -67,6 +68,8 @@ Parse:
 - Output specification
 
 **If plan references CONTEXT.md:** The CONTEXT.md file provides the user's vision for this phase — how they imagine it working, what's essential, and what's out of scope. Honor this context throughout execution.
+
+**Parallel safety (allowlist):** Treat `files_modified` as an allowlist. If you need to touch a file outside `files_modified` (and not covered by `may_touch_globs`), STOP and return a checkpoint decision to the orchestrator before making the change. This prevents parallel wave conflicts.
 </step>
 
 <step name="record_start_time">
@@ -141,6 +144,17 @@ Execute each task in the plan.
 5. Confirm all success criteria from `## Success Criteria` section met
 6. Document all deviations in Summary
     </step>
+
+<verification_failure_gate>
+If any task verification or final verification fails, or success criteria are not met:
+
+- Do NOT return `## PLAN COMPLETE`.
+- Return a checkpoint using the checkpoint_return_format with **Type: decision**.
+- Include the exact failing command(s) and the first relevant error excerpt (no speculation).
+- Provide options: Retry verification, Skip (mark plan `status: partial`), Stop (abort plan).
+
+This keeps execution aligned with the GPT-5.2/Codex guidance on explicit output shape and avoids false positives.
+</verification_failure_gate>
 
 </execution_flow>
 
@@ -284,7 +298,16 @@ Apply these rules automatically. Track all deviations for Summary documentation.
 
 - YES → Rules 1-3 (fix automatically)
 - MAYBE → Rule 4 (return checkpoint for user decision)
-  </deviation_rules>
+</deviation_rules>
+
+<parallel_safety_override>
+When spawned by `/gsd-execute-phase` (parallel waves possible):
+
+- Do NOT edit `.planning/*.md` files (except the plan SUMMARY). Return a planning_delta instead.
+- If a Rule 3 blocker fix requires touching files outside `files_modified` (and not covered by `may_touch_globs`), STOP and return a checkpoint decision with the proposed change and why it is required.
+
+This prevents silent cross-plan conflicts when the orchestrator is parallelizing.
+</parallel_safety_override>
 
 <authentication_gates>
 **When you encounter authentication errors during `auto` task execution:**

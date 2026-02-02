@@ -18,7 +18,9 @@ plan: NN
 type: execute
 wave: N                     # Execution wave (1, 2, 3...). Pre-computed at plan time.
 depends_on: []              # Plan IDs this plan requires (e.g., ["01-01"]).
-files_modified: []          # Files this plan modifies.
+files_modified: []          # Allowlist of files this plan is expected to touch.
+may_touch_globs: []         # Optional glob patterns for likely extra touches.
+locks: []                   # Shared resource locks (parallel safety).
 autonomous: true            # false if plan has checkpoints requiring user interaction
 user_setup: []              # Human-required setup assistant cannot automate (see below)
 
@@ -135,12 +137,16 @@ After completion, create `.planning/phases/XX-name/{phase}-{plan}-SUMMARY.md`
 | `type` | Yes | Always `execute` for standard plans, `tdd` for TDD plans |
 | `wave` | Yes | Execution wave number (1, 2, 3...). Pre-computed at plan time. |
 | `depends_on` | Yes | Array of plan IDs this plan requires. |
-| `files_modified` | Yes | Files this plan touches. |
+| `files_modified` | Yes | Allowlist of files this plan is expected to touch. |
+| `may_touch_globs` | No | Globs for likely extra touches (shared harness/config). |
+| `locks` | No | Shared resource locks to prevent parallel conflicts. |
 | `autonomous` | Yes | `true` if no checkpoints, `false` if has checkpoints |
 | `user_setup` | No | Array of human-required setup items (external services) |
 | `must_haves` | Yes | Goal-backward verification criteria (see below) |
 
 **Wave is pre-computed:** Wave numbers are assigned during `/gsd-plan-phase`. Execute-phase reads `wave` directly from frontmatter and groups plans by wave number. No runtime dependency analysis needed.
+
+**Parallel safety:** `files_modified` is an allowlist. Use `locks` for shared resources (`deps`, `tests-harness`, `ci-config`, `app-config`, `planning-docs`). Use `may_touch_globs` for commonly required shared files like `tests/**/conftest.*` or lockfiles.
 
 **Must-haves enable verification:** The `must_haves` field carries goal-backward requirements from planning to execution. After all plans complete, execute-phase spawns a verification subagent that checks these criteria against the actual codebase.
 
@@ -157,22 +163,25 @@ After completion, create `.planning/phases/XX-name/{phase}-{plan}-SUMMARY.md`
 wave: 1
 depends_on: []
 files_modified: [src/models/user.ts, src/api/users.ts]
+locks: []
 autonomous: true
 
 # Plan 02 - Product feature (no overlap with Plan 01)
 wave: 1
 depends_on: []
 files_modified: [src/models/product.ts, src/api/products.ts]
+locks: []
 autonomous: true
 
 # Plan 03 - Order feature (no overlap)
 wave: 1
 depends_on: []
 files_modified: [src/models/order.ts, src/api/orders.ts]
+locks: []
 autonomous: true
 ```
 
-All three run in parallel (Wave 1) - no dependencies, no file conflicts.
+All three run in parallel (Wave 1) - no dependencies, no file conflicts, no shared locks.
 
 **Sequential (genuine dependency):**
 
@@ -181,12 +190,14 @@ All three run in parallel (Wave 1) - no dependencies, no file conflicts.
 wave: 1
 depends_on: []
 files_modified: [src/lib/auth.ts, src/middleware/auth.ts]
+locks: [app-config]
 autonomous: true
 
 # Plan 02 - Protected features (needs auth)
 wave: 2
 depends_on: ["01"]
 files_modified: [src/features/dashboard.ts]
+locks: []
 autonomous: true
 ```
 
@@ -199,6 +210,7 @@ Plan 02 in Wave 2 waits for Plan 01 in Wave 1 - genuine dependency on auth types
 wave: 3
 depends_on: ["01", "02"]
 files_modified: [src/components/Dashboard.tsx]
+locks: []
 autonomous: false  # Has checkpoint:human-verify
 ```
 
@@ -291,10 +303,10 @@ See `~/.config/opencode/get-shit-done/references/tdd.md` for TDD plan structure.
 
 **Checkpoint behavior in parallel execution:**
 - Plan runs until checkpoint
-- Agent returns with checkpoint details + agent_id
+- Agent returns with checkpoint details
 - Orchestrator presents to user
 - User responds
-- Orchestrator resumes agent with `resume: agent_id`
+- Orchestrator spawns a fresh continuation agent (not resume)
 
 ---
 
@@ -313,6 +325,8 @@ files_modified:
   - src/features/user/model.ts
   - src/features/user/api.ts
   - src/features/user/UserList.tsx
+may_touch_globs: []
+locks: []
 autonomous: true
 ---
 
@@ -380,6 +394,8 @@ type: execute
 wave: 2
 depends_on: ["03-01", "03-02"]
 files_modified: [src/components/Dashboard.tsx]
+may_touch_globs: []
+locks: []
 autonomous: false
 ---
 
@@ -491,7 +507,7 @@ files_modified: [...]
 ## Guidelines
 
 - Always use this Markdown plan schema: required `##` sections + `### Task N:` blocks + `**Key:**` fields
-- Include `wave`, `depends_on`, `files_modified`, `autonomous` in every plan
+- Include `wave`, `depends_on`, `files_modified`, `may_touch_globs`, `locks`, `autonomous` in every plan
 - Prefer vertical slices over horizontal layers
 - Only reference prior SUMMARYs when genuinely needed
 - Group checkpoints with related auto tasks in same plan

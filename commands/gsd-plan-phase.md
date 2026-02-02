@@ -246,7 +246,7 @@ Fill prompt with inlined content and spawn:
 Output consumed by /gsd-execute-phase
 Plans must be executable prompts with:
 
-- Frontmatter (wave, depends_on, files_modified, autonomous)
+- Frontmatter (wave, depends_on, files_modified, may_touch_globs, locks, autonomous)
 - Tasks in Markdown task blocks (`### Task N:` with required `**Type:**`, `**Action:**`, `**Verify:**`, etc.)
 - Verification criteria
 - must_haves for goal-backward verification

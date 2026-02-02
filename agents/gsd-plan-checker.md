@@ -143,7 +143,34 @@ issue:
   fix_hint: "Plan 02 depends on 03, but 03 depends on 02"
 ```
 
-## Dimension 4: Key Links Planned
+## Dimension 4: Parallelization Safety
+
+**Question:** Can plans in the same wave actually run in parallel without conflict?
+
+**Process:**
+1. Group plans by `wave`.
+2. For each wave, check overlaps in:
+   - `files_modified`
+   - `may_touch_globs`
+   - `locks`
+3. Any overlap in the same wave is a conflict.
+
+**Red flags:**
+- Same-wave plans share a lock (`deps`, `tests-harness`, `ci-config`, `app-config`, `planning-docs`).
+- Same-wave plans overlap in `files_modified`.
+- Same-wave plans have overlapping `may_touch_globs` (e.g., `tests/**/conftest.*`).
+
+**Example issue:**
+```yaml
+issue:
+  dimension: parallelization_safety
+  severity: blocker
+  description: "Wave 1 plans share lock 'deps'"
+  plans: ["01", "02"]
+  fix_hint: "Move one plan to the next wave or remove shared lock"
+```
+
+## Dimension 5: Key Links Planned
 
 **Question:** Are artifacts wired together, not just created in isolation?
 
@@ -177,7 +204,7 @@ issue:
   fix_hint: "Add fetch call in Chat.tsx action or create wiring task"
 ```
 
-## Dimension 5: Scope Sanity
+## Dimension 6: Scope Sanity
 
 **Question:** Will plans complete within context budget?
 
@@ -212,7 +239,7 @@ issue:
   fix_hint: "Split into 2 plans: foundation (01) and integration (02)"
 ```
 
-## Dimension 6: Verification Derivation
+## Dimension 7: Verification Derivation
 
 **Question:** Do must_haves trace back to phase goal?
 
@@ -281,7 +308,7 @@ done
 ```
 
 **Parse from each plan:**
-- Frontmatter (phase, plan, wave, depends_on, files_modified, autonomous, must_haves)
+- Frontmatter (phase, plan, wave, depends_on, files_modified, may_touch_globs, locks, autonomous, must_haves)
 - Objective
 - Tasks (type, name, files, action, verify, done)
 - Verification criteria
@@ -368,7 +395,18 @@ done
 
 **Cycle detection:** If A -> B -> C -> A, report cycle.
 
-## Step 7: Check Key Links Planned
+## Step 7: Check Parallelization Safety
+
+Verify that same-wave plans can safely run in parallel.
+
+**Check for conflicts within each wave:**
+- Overlapping `files_modified`
+- Overlapping `may_touch_globs`
+- Shared `locks`
+
+If any overlap exists in the same wave, report a blocker and recommend wave separation.
+
+## Step 8: Check Key Links Planned
 
 Verify artifacts are wired together in task actions.
 
@@ -385,7 +423,7 @@ Missing: No mention of fetch/API call in action
 Issue: Key link not planned
 ```
 
-## Step 8: Assess Scope
+## Step 9: Assess Scope
 
 Evaluate scope against context budget.
 
@@ -403,7 +441,7 @@ grep "files_modified:" "$PHASE_DIR"/${PHASE}-01-PLAN.md
 - 4 tasks/plan: Warning
 - 5+ tasks/plan: Blocker (split required)
 
-## Step 9: Verify must_haves Derivation
+## Step 10: Verify must_haves Derivation
 
 Check that must_haves are properly derived from phase goal.
 
@@ -422,7 +460,7 @@ Check that must_haves are properly derived from phase goal.
 - Specify the connection method (fetch, Prisma query, import)
 - Cover critical wiring (where stubs hide)
 
-## Step 10: Determine Overall Status
+## Step 11: Determine Overall Status
 
 Based on all dimension checks:
 
@@ -744,6 +782,7 @@ Plan verification complete when:
 - [ ] Requirement coverage checked (all requirements have tasks)
 - [ ] Task completeness validated (all required fields present)
 - [ ] Dependency graph verified (no cycles, valid references)
+- [ ] Parallelization safety checked (locks/globs/allowlists)
 - [ ] Key links checked (wiring planned, not just artifacts)
 - [ ] Scope assessed (within context budget)
 - [ ] must_haves derivation verified (user-observable truths)

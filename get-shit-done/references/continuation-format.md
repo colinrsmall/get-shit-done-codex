@@ -33,6 +33,13 @@ Standard format for presenting next steps after completing a command or workflow
 5. **"Also available" not "Other options"** — sounds more app-like
 6. **Visual separators** — `---` above and below to make it stand out
 
+## Checkpoint Continuations
+
+When continuing after a checkpoint, describe it as a fresh continuation agent, not a resume:
+
+- Good: "Spawning continuation agent with your response"
+- Avoid: "Resuming agent_id"
+
 ## Example
 
 ### Execute Next Plan

@@ -78,7 +78,7 @@ GSD now treats planning as a deliberate, user-reviewed loop instead of auto-appr
 
 Plan files (`.planning/phases/*/*-PLAN.md`) are now pure Markdown (no XML task tags) and are designed to be both human-readable and machine-readable:
 
-- Machine-readable: YAML frontmatter (wave, depends_on, files_modified, autonomous, must_haves)
+- Machine-readable: YAML frontmatter (wave, depends_on, files_modified, may_touch_globs, locks, autonomous, must_haves)
 - Human-readable: required Markdown sections (`## Objective`, `## Tasks`, `## Verification`, ...)
 - Tasks: each task is a `### Task N:` block with required `**Type:**`, `**Action:**`, `**Verify:**`, and `**Done When:**` fields (plus checkpoint-specific fields)
 

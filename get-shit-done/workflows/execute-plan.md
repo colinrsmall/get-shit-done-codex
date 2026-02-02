@@ -1068,6 +1068,8 @@ Present inline:
 
 Expected: [verification criteria]
 Actual: [what happened]
+Failed command: `[exact command]`
+Error excerpt: [first relevant error lines; no speculation]
 
 How to proceed?
 
@@ -1185,6 +1187,10 @@ Before writing summary content, populate frontmatter fields from execution conte
 1. **Basic identification:**
    - phase: From PLAN.md frontmatter
    - plan: From PLAN.md frontmatter
+   - status:
+     - `complete` if all verification checks passed
+     - `partial` if some tasks completed but verification failed or was skipped
+     - `blocked` if execution stopped due to a blocking issue
    - subsystem: Categorize based on phase focus (auth, payments, ui, api, database, infra, testing, etc.)
    - tags: Extract tech keywords (libraries, frameworks, tools used)
 

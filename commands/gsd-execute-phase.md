@@ -217,20 +217,14 @@ After user runs /gsd-plan-phase {Z} --gaps:
 <wave_execution>
 **Parallel spawning:**
 
-Before spawning, read file contents. The `@` syntax does not work across Task() boundaries.
+Before spawning, do NOT inline plan contents. The `@` syntax does not expand across Task() boundaries, and inlining bloats context. Pass paths and let the executor read files directly.
 
-Use the Read tool to load:
-- `plan_01_content` from `{plan_01_path}`
-- `plan_02_content` from `{plan_02_path}`
-- `plan_03_content` from `{plan_03_path}`
-- `state_content` from `.planning/STATE.md`
-
-Spawn all plans in a wave with a single message containing multiple Task calls, with inlined content:
+Spawn all plans in a wave with a single message containing multiple Task calls, passing only paths/context pointers:
 
 ```
-Task(prompt="Execute plan at {plan_01_path}\n\nPlan:\n{plan_01_content}\n\nProject state:\n{state_content}", subagent_type="gsd-executor")
-Task(prompt="Execute plan at {plan_02_path}\n\nPlan:\n{plan_02_content}\n\nProject state:\n{state_content}", subagent_type="gsd-executor")
-Task(prompt="Execute plan at {plan_03_path}\n\nPlan:\n{plan_03_content}\n\nProject state:\n{state_content}", subagent_type="gsd-executor")
+Task(prompt="Execute plan at {plan_01_path}\n\nPhase dir: {phase_dir}\nConfig path (if exists): .planning/config.json\nOrchestrator manages STATE.md: true\n\nRead the plan file and any @context references yourself.", subagent_type="gsd-executor")
+Task(prompt="Execute plan at {plan_02_path}\n\nPhase dir: {phase_dir}\nConfig path (if exists): .planning/config.json\nOrchestrator manages STATE.md: true\n\nRead the plan file and any @context references yourself.", subagent_type="gsd-executor")
+Task(prompt="Execute plan at {plan_03_path}\n\nPhase dir: {phase_dir}\nConfig path (if exists): .planning/config.json\nOrchestrator manages STATE.md: true\n\nRead the plan file and any @context references yourself.", subagent_type="gsd-executor")
 ```
 
 All three run in parallel. Task tool blocks until all complete.

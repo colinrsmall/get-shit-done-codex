@@ -96,6 +96,9 @@ For each plan, read frontmatter to extract:
 - `wave: N` - Execution wave (pre-computed)
 - `autonomous: true/false` - Whether plan has checkpoints
 - `gap_closure: true/false` - Whether plan closes gaps from verification/UAT
+- `locks: [...]` - Shared resource locks (parallelization safety)
+- `files_modified: [...]` - Allowlist of files the plan is expected to touch
+- `may_touch_globs: [...]` - Glob patterns for likely extra touches (optional)
 
 Build plan inventory:
 - Plan path
@@ -103,10 +106,12 @@ Build plan inventory:
 - Wave number
 - Autonomous flag
 - Gap closure flag
-- Completion status (SUMMARY exists = complete)
+- Completion status (SUMMARY exists AND status: complete)
 
 **Filtering:**
-- Skip completed plans (have SUMMARY.md)
+- Skip completed plans (SUMMARY exists and frontmatter `status: complete`)
+- If SUMMARY exists but `status` is missing (legacy), treat as complete
+- If SUMMARY exists but `status` is `partial` or `blocked`, treat as incomplete
 - If `--gaps-only` flag: also skip plans where `gap_closure` is not `true`
 
 If all plans filtered out, report "No matching incomplete plans" and exit.
@@ -160,12 +165,22 @@ Execute each wave in sequence. Autonomous plans within a wave run in parallel.
 
 **Shared planning files + parallelism (important):**
 
-- Treat `.planning/STATE.md` as **orchestrator-owned** during phase execution.
-  - Executors SHOULD NOT write `.planning/STATE.md` when spawned by `/gsd-execute-phase`.
+- Treat `.planning/*.md` as **orchestrator-owned** during phase execution.
+  - Executors SHOULD NOT write `.planning/STATE.md`, `.planning/ROADMAP.md`, or `.planning/REQUIREMENTS.md` when spawned by `/gsd-execute-phase`.
   - Executors instead return a `planning_delta` block (see executor contract) and the orchestrator applies it.
-- For other files (including `.planning/ROADMAP.md`, `.planning/REQUIREMENTS.md`), executors may edit them *if* the plan requires it.
-  - To avoid races, only parallelize plans whose `files_modified` sets are disjoint.
-  - If two plans might overlap (including shared `.planning/*` files), run them sequentially even if they share a wave.
+- Treat `files_modified` as an **allowlist** for what a plan is expected to touch.
+  - If a plan needs to touch files outside `files_modified`, it must return a checkpoint/decision (or a warning) before proceeding.
+  - Orchestrator should treat any out-of-allowlist changes as a potential parallelization conflict.
+- Parallel safety uses **locks** and **may_touch_globs** (if provided):
+  - If two plans share a lock, run them sequentially even if they share a wave.
+  - If `may_touch_globs` overlap across plans, run them sequentially.
+- Always serialize when plans might touch shared infra, even if `files_modified` appears disjoint. Treat these as global lock categories unless explicitly planned:
+  - `deps` (package.json/lockfiles/pyproject/uv.lock)
+  - `tests-harness` (tests/**/conftest.*, shared fixtures)
+  - `ci-config` (CI workflows/config)
+  - `app-config` (settings/env templates)
+  - `planning-docs` (.planning/*.md)
+- If in doubt, serialize.
 
 </concurrency_rules>
 
@@ -240,6 +255,8 @@ Execute each wave in sequence. Autonomous plans within a wave run in parallel.
 
    For each completed agent:
    - Verify SUMMARY.md exists at expected path
+   - Read SUMMARY.md frontmatter; treat plan as complete only if `status: complete` (missing status = legacy complete)
+   - If SUMMARY exists but status is `partial` or `blocked`, treat this plan as failed and follow failure handling
    - Read SUMMARY.md to extract what was built
    - Note any issues or deviations
    - Apply `planning_delta` from the agent return:
